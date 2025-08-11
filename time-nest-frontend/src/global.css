@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+.card {
+    border-radius: 1rem;           /* Rounded corners */
+    padding: 2rem;                 /* Appropriate padding */
+    margin-left: auto;             /* Center along x axis */
+    margin-right: auto;
+    margin-top: 2rem;          /* Space between cards */
+    background-color: #312e81;     /* Dark indigo */
+    border: 2px solid #fff;        /* White border */
+    color: #fff;                   /* White text */
+    font-family: serif;
+    font-size: x-large;            /* Serif font */
+    max-width: 400px;              /* Optional: limit card width */
+    text-align: start;            /* Center text and image */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); /* Optional: subtle shadow */
+}
+
+.employee-card {
+    background-color: #fff;        /* White background */
+    color: #000;                   /* Black text */
+    border: 2px solid #000;        /* Black border */
+    border-radius: 1rem;           /* Rounded corners */
+    font-family: serif;            /* Serif font */
+    padding: 2rem;                 /* Good padding */
+    margin: 2rem auto;             /* Good margin, centered */
+    width: 100%;                   /* Responsive width */
+    max-width: 700px;              /* Wide but responsive */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10); /* Subtle shadow */
+    text-align: start;             /* Left align text */
+}
+
+.navbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    background: white;
+    border: 2px solid #000;
+    color: #000;
+    font-family: serif;
+    padding: 0.75rem 0;
+    z-index: 50;
+    transition: top 0.3s, bottom 0.3s;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        bottom: 0;
+        top: auto;
+    }
+}
+
+@media (min-width: 769px) {
+    .navbar {
+        top: 0;
+        bottom: auto;
+    }
+}

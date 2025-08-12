@@ -143,8 +143,7 @@ public class AuthenticationService {
     // Update company if join code is provided
     if (input.getNewCompanyJoinCode() != null && !input.getNewCompanyJoinCode().isBlank()) {
         try {
-            Long joinCode = Long.parseLong(input.getNewCompanyJoinCode());
-            Company company = companyRepository.findByJoinCode(joinCode)
+            Company company = companyRepository.findByJoinCode("")
                 .orElseThrow(() -> new RuntimeException("Company not found with join code"));
             user.setCompany(company);
         } catch (NumberFormatException e) {

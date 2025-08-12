@@ -6,10 +6,10 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.example.Mind_Forge.model.Company;
-import com.example.Mind_Forge.model.User;
+
 
 @Repository
-public interface CompanyRepository  extends CrudRepository<User, Long> {
+public interface CompanyRepository  extends CrudRepository<Company, Long> {
 
     /*
      * - Spring sees findBy_() and auto-generates a query like
@@ -17,6 +17,6 @@ public interface CompanyRepository  extends CrudRepository<User, Long> {
      */
 
     Optional<Company> findByName(String name);
-    Optional<Company> findByJoinCode(Long joinCode);
+    Optional<Company> findByJoinCode(String joinCode);
     boolean existsByJoinCode(String joinCode);
 }

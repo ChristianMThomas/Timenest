@@ -1,12 +1,12 @@
 {"properties": [
   {
-    "name": "security.jwt.secret",
+    "name": "security.jwt.secret-key",
     "type": "java.lang.String",
-    "description": "A description for 'secuirty.jwt.secret'"
+    "description": "A description for 'secuirty.jwt.secret-key'"
   },
   {
-    "name": "security.jwt.expiration",
+    "name": "security.jwt.expiration-time",
     "type": "java.lang.String",
-    "description": "A description for 'secuirty.jwt.expiration'"
+    "description": "A description for 'secuirty.jwt.expiration-time'"
   }
 ]}

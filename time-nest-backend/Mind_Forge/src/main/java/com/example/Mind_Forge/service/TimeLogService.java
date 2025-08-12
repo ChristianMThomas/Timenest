@@ -69,4 +69,14 @@ public class TimeLogService {
     public List<TimeLog> displayTimeLogsByLocation(String location) {
         return timeLogRepository.findByLocation(location);
     }
+    // Gets time log by the id
+    public TimeLog getTimeLogById(Long id) {
+    return timeLogRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Time log not found with ID: " + id));
+}
+    // ✅ Delete time log
+    public void deleteTimeLog(Long id) {
+        timeLogRepository.deleteById(id);
+    }
+
 }

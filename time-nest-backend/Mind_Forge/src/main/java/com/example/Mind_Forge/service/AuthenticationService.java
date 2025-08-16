@@ -8,7 +8,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 import com.example.Mind_Forge.dto.user.LoginUserDto;
 import com.example.Mind_Forge.dto.user.RegisterUserDto;
 import com.example.Mind_Forge.dto.user.UpdateUserDto;
@@ -28,7 +27,8 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final CompanyRepository companyRepository;
 
-    public AuthenticationService(UserRepository userRepository, CompanyRepository companyRepository, PasswordEncoder passwordEncoder,
+    public AuthenticationService(UserRepository userRepository, CompanyRepository companyRepository,
+            PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -38,19 +38,15 @@ public class AuthenticationService {
     }
 
     public User register(RegisterUserDto input) {
-    Company company = companyRepository.findByJoinCode(input.getCompanyId())
-    .orElseThrow(() -> new RuntimeException("Invalid Company Join Code"));
-        
+        User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()),
+                "USER");
+        user.setVerificationCode(generateVerificationCode());
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
+        user.setEnabled(false);
 
-    User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()), "USER");
-    user.setCompany(company);
-    user.setVerificationCode(generateVerificationCode());
-    user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-    user.setEnabled(false);
-
-    sendVerificationEmail(user);
-    return userRepository.save(user);
-}
+        sendVerificationEmail(user);
+        return userRepository.save(user);
+    }
 
     public User authenticate(LoginUserDto input) {
         User user = userRepository.findByEmail(input.getEmail())
@@ -107,13 +103,13 @@ public class AuthenticationService {
         String htmlMsg = "<html>"
                 + "<body style=\"background-color:#f3f4f6; font-family:'Segoe UI', sans-serif; margin:0; padding:0;\">"
                 + "<div style=\"max-width:600px; margin:40px auto; background-color:#ffffff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; text-align:center;\">"
-                + "<div style=\"font-size:26px; color:#3b82f6; font-weight:600; margin-bottom:10px;\">Mafia Madness</div>"
+                + "<div style=\"font-size:26px; color:#3b82f6; font-weight:600; margin-bottom:10px;\">Timenest</div>"
                 + "<div style=\"font-size:22px; font-weight:500; color:#111827;\">Verify Your Email</div>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">Hello! We're excited to have you. Please use the verification code below to complete your registration.</div>"
                 + "<div style=\"font-size:32px; font-weight:bold; letter-spacing:4px; color:#10b981; background-color:#ecfdf5; padding:10px 20px; border-radius:8px; display:inline-block; margin-bottom:20px;\">"
                 + VerificationCode + "</div>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">This code is valid for the next 15 minutes.</div>"
-                + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request this code, feel free to ignore this message.<br />– Mind-Forge LLC</div>"
+                + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request this code, feel free to ignore this message.<br /> Mind-Forge LLC</div>"
                 + "</div>"
                 + "</body>"
                 + "</html>";
@@ -132,41 +128,37 @@ public class AuthenticationService {
     }
 
     public User updateUser(UpdateUserDto input) {
-    User user = userRepository.findByEmail(input.getEmail())
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(input.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // Update username if provided
-    if (input.getNewUsername() != null && !input.getNewUsername().isBlank()) {
-        user.setUsername(input.getNewUsername());
-    }
-
-    // Update company if join code is provided
-    if (input.getNewCompanyJoinCode() != null && !input.getNewCompanyJoinCode().isBlank()) {
-        try {
-            Company company = companyRepository.findByJoinCode("")
-                .orElseThrow(() -> new RuntimeException("Company not found with join code"));
-            user.setCompany(company);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid join code format: must be a number");
+        // Update username if provided
+        if (input.getNewUsername() != null && !input.getNewUsername().isBlank()) {
+            user.setUsername(input.getNewUsername());
         }
-    }
 
-    return userRepository.save(user);
-}
+        // Update company if join code is provided
+        if (input.getNewCompanyJoinCode() != null && !input.getNewCompanyJoinCode().isBlank()) {
+            try {
+                Company company = companyRepository.findByJoinCode("")
+                        .orElseThrow(() -> new RuntimeException("Company not found with join code"));
+                user.setCompany(company);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid join code format: must be a number");
+            }
+        }
+
+        return userRepository.save(user);
+    }
 
     public void updatePassword(UpdateUserDto input) {
-    User user = userRepository.findByEmail(input.getEmail())
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(input.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(input.getEmail(), input.getCurrentPassword())
-    );
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(input.getEmail(), input.getCurrentPassword()));
 
-    user.setPassword(passwordEncoder.encode(input.getNewPassword()));
-    userRepository.save(user);
-}
-
-
-
+        user.setPassword(passwordEncoder.encode(input.getNewPassword()));
+        userRepository.save(user);
+    }
 
 }

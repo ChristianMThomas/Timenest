@@ -5,12 +5,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateCompanyDto {
-    private String name;
+public class JoinCompanyDto {
+
     private String joinCode;
 
-    public UpdateCompanyDto(String name, String joinCode) {
-        this.name = name;
+    public JoinCompanyDto(String joinCode) {
         this.joinCode = joinCode;
     }
+
 }

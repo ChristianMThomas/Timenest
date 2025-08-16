@@ -15,7 +15,7 @@ import com.example.Mind_Forge.service.AuthenticationService;
 import com.example.Mind_Forge.service.JwtService;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,7 +51,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(loginResponse);
     }
 
-    @PostMapping("/verify")
+    @PostMapping(value = "/verify", consumes = "application/json", produces = "application/json")
     public ResponseEntity<ApiMessage> verifyUser(@RequestBody VerifyUserDto vUserDto) {
         try {
             authenticationService.verifyUser(vUserDto);

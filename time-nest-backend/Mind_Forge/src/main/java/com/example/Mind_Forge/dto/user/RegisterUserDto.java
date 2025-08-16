@@ -9,7 +9,6 @@ public class RegisterUserDto {
     private String username;
     private String email;
     private String password;
-    private String companyId; // optional if user selects a company
 }
 
 

@@ -16,16 +16,24 @@ public class UserService {
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
-        return users;
-    }
+    // Disabling this method until admins exits
+    /*
+     * public List<User> getAllUsers() {
+     * List<User> users = new ArrayList<>();
+     * userRepository.findAll().forEach(users::add);
+     * return users;
+     * }
+     */
 
     public Optional<User> findUserByEmail(String email) {
-    return userRepository.findByEmail(email);
-}
+        return userRepository.findByEmail(email);
+    }
 
-   
+    public void deleteById(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("User not found");
+        }
+        userRepository.deleteById(id);
+    }
+
 }

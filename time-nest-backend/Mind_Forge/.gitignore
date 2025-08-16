@@ -33,8 +33,7 @@ build/
 .vscode/
 
 # Ignore backend environment config
-time-nest-backend/Mind_Forge/src/main/resources/.env.properties
-
+src/main/resources/.env.properties
 
 
 

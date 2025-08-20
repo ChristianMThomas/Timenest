@@ -55,6 +55,7 @@ public class AuthenticationService {
         if (!user.isEnabled()) {
             throw new RuntimeException("Account not verified! Please verify your account.");
         }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.getEmail(), input.getPassword()));
@@ -74,6 +75,7 @@ public class AuthenticationService {
                 user.setEnabled(true);
                 user.setVerificationCode(null);
                 user.setVerificationCodeExpiresAt(null);
+                user.setRole("user");
                 userRepository.save(user);
             } else {
                 throw new RuntimeException("User not found :C ");
@@ -106,7 +108,7 @@ public class AuthenticationService {
                 + "<div style=\"font-size:26px; color:#3b82f6; font-weight:600; margin-bottom:10px;\">Timenest</div>"
                 + "<div style=\"font-size:22px; font-weight:500; color:#111827;\">Verify Your Email</div>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">Hello! We're excited to have you. Please use the verification code below to complete your registration.</div>"
-                + "<div style=\"font-size:32px; font-weight:bold; letter-spacing:4px; color:#10b981; background-color:#ecfdf5; padding:10px 20px; border-radius:8px; display:inline-block; margin-bottom:20px;\">"
+                + "<div style=\"font-size:32px; font-weight:bold; letter-spacing:4px; color:#fffff; background-color:#3b82f6; padding:10px 20px; border-radius:8px; display:inline-block; margin-bottom:20px;\">"
                 + VerificationCode + "</div>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">This code is valid for the next 15 minutes.</div>"
                 + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request this code, feel free to ignore this message.<br /> Mind-Forge LLC</div>"

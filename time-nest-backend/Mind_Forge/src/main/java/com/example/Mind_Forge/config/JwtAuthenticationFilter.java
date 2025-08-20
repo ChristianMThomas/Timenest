@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
+import com.example.Mind_Forge.service.CompanyService;
 import com.example.Mind_Forge.service.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -20,11 +21,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JwtService jwtService,
             UserDetailsService userDetailsService) {
@@ -59,6 +65,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (userEmail != null && auth == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                log.info("Authenticated user: {}", userDetails.getUsername());
+                log.info("Authorities: {}", userDetails.getAuthorities());
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,

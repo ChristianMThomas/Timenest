@@ -4,8 +4,14 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 import lombok.Getter;
@@ -16,6 +22,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class User implements UserDetails {
+    private static final Logger log = LoggerFactory.getLogger(User.class);
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -30,7 +37,7 @@ public class User implements UserDetails {
     private String password;
 
     @Column(name = "role")
-    private String role;
+    private String role; // e.g., "employee", "executive"
 
     @Column(name = "verification_code")
     private String verificationCode;
@@ -42,13 +49,12 @@ public class User implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "company_id")
+    @JsonIgnore // or @JsonManagedReference
     private Company company;
 
-    // Default no args constructor
     public User() {
     }
 
-    // Constructor with parameters
     public User(String username, String email, String password, String role) {
         this.username = username;
         this.email = email;
@@ -56,9 +62,27 @@ public class User implements UserDetails {
         this.role = role;
     }
 
+    // ✅ Map domain role to Spring Security authority
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        log.info("User role from DB: {}", role);
+
+        if (role == null || role.isBlank()) {
+            return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+
+        String springRole = switch (role.toLowerCase()) {
+            case "executive" -> "ROLE_EXECUTIVE";
+            case "employee" -> "ROLE_EMPLOYEE";
+            default -> "ROLE_USER";
+        };
+
+        return List.of(new SimpleGrantedAuthority(springRole));
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email; // JWT subject = email
     }
 
     @Override
@@ -80,10 +104,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return enabled;
     }
-
-    @Override
-    public String getUsername() {
-        return this.email; // ✅ ensures JWT subject is email
-    }
-
 }

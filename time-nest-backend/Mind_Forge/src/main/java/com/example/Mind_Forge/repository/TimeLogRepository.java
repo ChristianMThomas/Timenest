@@ -1,5 +1,6 @@
 package com.example.Mind_Forge.repository;
 
+import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.model.TimeLog;
 import com.example.Mind_Forge.model.User;
 import org.springframework.data.repository.CrudRepository;
@@ -18,4 +19,6 @@ public interface TimeLogRepository extends CrudRepository<TimeLog, Long> {
     List<TimeLog> findByUser(User user);
 
     List<TimeLog> findByLocation(String location);
+
+    List<TimeLog> findByCompany(Company company);
 }

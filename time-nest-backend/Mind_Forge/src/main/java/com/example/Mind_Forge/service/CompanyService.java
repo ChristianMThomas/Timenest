@@ -53,14 +53,11 @@ public class CompanyService {
      * }
      */
 
-    // ✅ Create a new company
+    // Create a new company
     @Transactional
     public Company createCompany(CreateCompanyDto input) {
-        log.info("createCompany() method triggered");
-        Company company = new Company(input.getName(), input.getJoinCode());
-        Company savedCompany = companyRepository.save(company);
 
-        // ✅ Extract authenticated user
+        // Extract authenticated user
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String email;
 
@@ -73,17 +70,30 @@ public class CompanyService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
+        // Create and assign executive
+        Company company = new Company(input.getName(), input.getJoinCode());
+        company.setExecutiveId(user.getId());
+        Company savedCompany = companyRepository.save(company);
         log.info("Saved company ID: {}", savedCompany.getId());
-
-        user.setCompany(savedCompany);
-
+        user.setRole("executive");
+        user.setCompany(savedCompany); // if you want reverse lookup
         userRepository.saveAndFlush(user);
+
         return savedCompany;
     }
 
-    public Company joinCompany(String joinCode, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    // Join a existing company
+    @Transactional
+    public Company joinCompany(String joinCode) {
+
+        // Get authenticated user
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String email = (principal instanceof UserDetails)
+                ? ((UserDetails) principal).getUsername()
+                : principal.toString();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
         if (user.getCompany() != null) {
             throw new IllegalStateException("User already belongs to a company");
@@ -93,7 +103,10 @@ public class CompanyService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid join code"));
 
         user.setCompany(company);
+        user.setRole("employee");
+
         userRepository.save(user);
+        log.info("User {} joined company {}", user.getEmail(), company.getName());
 
         return company;
     }

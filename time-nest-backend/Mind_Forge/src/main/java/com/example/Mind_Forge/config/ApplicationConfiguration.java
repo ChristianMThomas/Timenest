@@ -17,8 +17,9 @@ import com.example.Mind_Forge.repository.UserRepository;
 @Configuration
 public class ApplicationConfiguration {
 
-    // Centraliz bean creations to keep code smooth and readable 
-    //Tells Spring that it contains bean definitions — reusable components that Spring will manage and inject wherever needed.
+    // Centraliz bean creations to keep code smooth and readable
+    // Tells Spring that it contains bean definitions — reusable components that
+    // Spring will manage and inject wherever needed.
 
     private final UserRepository userRepository;
 
@@ -30,17 +31,14 @@ public class ApplicationConfiguration {
 
     @Bean
     UserDetailsService userDetailsService() {
-        return username -> {
-         return userRepository.findByEmail(username)
-        .orElseThrow(() -> {
-            log.warn("Failed login attempt for username: {}", username);
-            throw new UsernameNotFoundException("Username not found!");
-        });
-    };
-}
-
-
-
+        return email -> {
+            return userRepository.findByEmail(email)
+                    .orElseThrow(() -> {
+                        log.warn("Failed login attempt for user: {}", email);
+                        throw new UsernameNotFoundException("User not found!");
+                    });
+        };
+    }
 
     @Bean
     BCryptPasswordEncoder passwordEncoder() {

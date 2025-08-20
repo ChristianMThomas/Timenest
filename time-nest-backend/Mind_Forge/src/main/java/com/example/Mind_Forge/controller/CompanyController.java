@@ -5,6 +5,9 @@ import com.example.Mind_Forge.dto.company.JoinCompanyDto;
 import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.response.CompanyResponse;
 import com.example.Mind_Forge.service.CompanyService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private static final Logger log = LoggerFactory.getLogger(CompanyController.class);
 
     public CompanyController(CompanyService companyService) {
         this.companyService = companyService;
@@ -22,17 +26,23 @@ public class CompanyController {
 
     @PostMapping("/create")
     public ResponseEntity<CompanyResponse> createCompany(@RequestBody CreateCompanyDto cCompanyDto) {
+        log.info("Received request to create company: {}", cCompanyDto.getName()); // 👈 Add this
         Company createdCompany = companyService.createCompany(cCompanyDto);
         return ResponseEntity.ok(new CompanyResponse(createdCompany));
     }
 
     @PostMapping("/join")
     public ResponseEntity<CompanyResponse> joinCompany(@RequestBody JoinCompanyDto jCompanyDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // Or use principal if casting is safe
-
-        Company joinedCompany = companyService.joinCompany(jCompanyDto.getJoinCode(), username);
+        Company joinedCompany = companyService.joinCompany(jCompanyDto.getJoinCode());
         return ResponseEntity.ok(new CompanyResponse(joinedCompany));
+    }
+
+    @GetMapping("/join")
+    public ResponseEntity<String> testAccess() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Principal: " + auth.getPrincipal());
+        System.out.println("Authorities: " + auth.getAuthorities());
+        return ResponseEntity.ok("Access granted");
     }
 
     @GetMapping("/{id}")

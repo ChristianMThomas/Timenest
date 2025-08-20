@@ -7,6 +7,8 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "companies")
 @Getter
@@ -14,7 +16,7 @@ import java.util.List;
 public class Company {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "created_at", nullable = false)
@@ -26,11 +28,16 @@ public class Company {
     @Column(name = "join_code", nullable = false, unique = true)
     private String joinCode;
 
+    @Column(name = "executive_id", nullable = false)
+    private Long executiveId;
+
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // or @JsonManagedReference
     private List<User> users;
 
     // Default constructor
-    public Company() {}
+    public Company() {
+    }
 
     // Constructor with fields
     public Company(String name, String joinCode) {
@@ -38,6 +45,5 @@ public class Company {
         this.joinCode = joinCode;
         this.createdAt = LocalDateTime.now();
     }
-
 
 }

@@ -10,6 +10,5 @@ public class TimeNestApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TimeNestApplication.class, args);
-	}
-
+	} 
 }

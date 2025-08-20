@@ -32,8 +32,13 @@ public class TimeLog {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     // Default constructor
-    public TimeLog() {}
+    public TimeLog() {
+    }
 
     // Constructor with fields
     public TimeLog(String location, LocalDateTime startTime, LocalDateTime endTime, Double hours, User user) {

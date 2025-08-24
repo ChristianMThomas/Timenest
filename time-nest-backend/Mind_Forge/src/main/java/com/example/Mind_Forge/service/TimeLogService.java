@@ -2,6 +2,8 @@ package com.example.Mind_Forge.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,39 +21,44 @@ import com.example.Mind_Forge.repository.UserRepository;
 @Service
 public class TimeLogService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TimeLogService.class);
+
     private final TimeLogRepository timeLogRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
 
     public TimeLogService(TimeLogRepository timeLogRepository,
-            UserRepository userRepository, CompanyRepository companyRepository) {
+            UserRepository userRepository,
+            CompanyRepository companyRepository) {
         this.timeLogRepository = timeLogRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
-
     }
 
-    public TimeLog createTimeLog(CreateTimeLogDto input) {
-        // Get authenticated user
+    private User getAuthenticatedUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String email = (principal instanceof UserDetails)
                 ? ((UserDetails) principal).getUsername()
                 : principal.toString();
 
-        User user = userRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+    }
 
-        // Restrict to EMPLOYEE role only
+    public TimeLog createTimeLog(CreateTimeLogDto input) {
+        User user = getAuthenticatedUser();
+
         if (!user.getRole().equalsIgnoreCase("employee")) {
+            logger.warn("Access denied: User '{}' attempted to create a time log without EMPLOYEE role",
+                    user.getEmail());
             throw new AccessDeniedException("Only employees can log time");
         }
 
-        // 🏢 Optional: check if user belongs to a company
         if (user.getCompany() == null) {
+            logger.warn("Access denied: Employee '{}' has no company assigned", user.getEmail());
             throw new IllegalStateException("User must belong to a company to log time");
         }
 
-        // Create time log
         TimeLog timeLog = new TimeLog();
         timeLog.setUser(user);
         timeLog.setLocation(input.getLocation());
@@ -64,22 +71,23 @@ public class TimeLogService {
     }
 
     public TimeLog updateTimeLog(Long timeLogId, UpdateTimeLogDto input) {
-        // Get authenticated user
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = (principal instanceof UserDetails)
-                ? ((UserDetails) principal).getUsername()
-                : principal.toString();
+        User user = getAuthenticatedUser();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-
-        // Restrict to EXECUTIVE role only
         if (!user.getRole().equalsIgnoreCase("executive")) {
+            logger.warn("Access denied: User '{}' attempted to update time log ID {} without EXECUTIVE role",
+                    user.getEmail(), timeLogId);
             throw new AccessDeniedException("Only executives can update time logs");
         }
 
         TimeLog timeLog = timeLogRepository.findById(timeLogId)
                 .orElseThrow(() -> new RuntimeException("Time log not found"));
+
+        if (!timeLog.getCompany().getId().equals(user.getCompany().getId())) {
+            logger.warn(
+                    "Access denied: Executive '{}' tried to update time log ID {} from another company (log company ID: {}, user company ID: {})",
+                    user.getEmail(), timeLogId, timeLog.getCompany().getId(), user.getCompany().getId());
+            throw new AccessDeniedException("You can only update logs for your own company");
+        }
 
         if (input.getStartTime() != null)
             timeLog.setStartTime(input.getStartTime());
@@ -87,38 +95,42 @@ public class TimeLogService {
             timeLog.setEndTime(input.getEndTime());
         if (input.getHours() != null)
             timeLog.setHours(input.getHours());
-        if (input.getLocation() != null && !input.getLocation().isBlank()) {
+        if (input.getLocation() != null && !input.getLocation().isBlank())
             timeLog.setLocation(input.getLocation());
-        }
 
         return timeLogRepository.save(timeLog);
     }
 
     public List<TimeLog> displayUserTimeLogs() {
-        // Get authenticated user from SecurityContext
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = (principal instanceof UserDetails)
-                ? ((UserDetails) principal).getUsername()
-                : principal.toString();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-
+        User user = getAuthenticatedUser();
         return timeLogRepository.findByUser(user);
     }
 
-    // Display time logs by location
     public List<TimeLog> displayTimeLogsByLocation(String location) {
         return timeLogRepository.findByLocation(location);
     }
 
-    // Gets time log by the id
     public TimeLog getTimeLogById(Long id) {
         return timeLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Time log not found with ID: " + id));
     }
 
     public List<TimeLog> getTimeLogsByCompany(Long companyId) {
+        User user = getAuthenticatedUser();
+
+        if (!user.getRole().equalsIgnoreCase("executive")) {
+            logger.warn("Access denied: User '{}' attempted to view company logs without EXECUTIVE role",
+                    user.getEmail());
+            throw new AccessDeniedException("Only executives can view company time logs");
+        }
+
+        if (user.getCompany() == null || !user.getCompany().getId().equals(companyId)) {
+            logger.warn(
+                    "Access denied: Executive '{}' tried to access logs for company ID {} but belongs to company ID {}",
+                    user.getEmail(), companyId, user.getCompany() != null ? user.getCompany().getId() : null);
+            throw new AccessDeniedException("You can only view logs for your own company");
+        }
+
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
 
@@ -126,21 +138,24 @@ public class TimeLogService {
     }
 
     public void deleteTimeLog(Long id) {
-        // Get authenticated user
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = (principal instanceof UserDetails)
-                ? ((UserDetails) principal).getUsername()
-                : principal.toString();
+        User user = getAuthenticatedUser();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-
-        // Restrict to EXECUTIVE role only
-        if (!user.getRole().equalsIgnoreCase("EXECUTIVE")) {
+        if (!user.getRole().equalsIgnoreCase("executive")) {
+            logger.warn("Access denied: User '{}' attempted to delete time log ID {} without EXECUTIVE role",
+                    user.getEmail(), id);
             throw new AccessDeniedException("Only executives can delete time logs");
+        }
+
+        TimeLog timeLog = timeLogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Time log not found"));
+
+        if (!timeLog.getCompany().getId().equals(user.getCompany().getId())) {
+            logger.warn(
+                    "Access denied: Executive '{}' tried to delete time log ID {} from another company (log company ID: {}, user company ID: {})",
+                    user.getEmail(), id, timeLog.getCompany().getId(), user.getCompany().getId());
+            throw new AccessDeniedException("You can only delete logs for your own company");
         }
 
         timeLogRepository.deleteById(id);
     }
-
 }

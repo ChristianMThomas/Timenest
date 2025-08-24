@@ -1,66 +1,95 @@
 import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
-
-// This is the login page and the first page the user sees
-// after they open the app. The user can log in with their email
-// and password. After logging in, they are redirected to the
-// organization selection page.
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  //Login state variables
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  // Registration state variables
   const [showRegister, setShowRegister] = useState(false);
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-
-
-  // Function to generate a defualt username from email
-  // by removing numeric digits and appending 5 random digits
+  const [isRegistering, setIsRegistering] = useState(false); // 🌀 Spinner state
 
   const generateUsername = (email) => {
-    const namePart = email.split('@')[0].replace(/\d/g, ''); // Remove numeric digits
-    const randomDigits = Math.floor(10000 + Math.random() * 90000); // 5 digits
+    const namePart = email.split("@")[0].replace(/\d/g, "");
+    const randomDigits = Math.floor(10000 + Math.random() * 90000);
     return `${namePart}${randomDigits}`;
   };
 
-
-  // Function to handle register
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (registerPassword !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    // Here you would typically send the registration data to your backend
-    alert("Registration successful! Please log in.");
-  }
 
-  // Handle form submission
-  // Store the generated username in localStorage
-  // Redirect to organization selection page
+    const username = generateUsername(registerEmail);
+    setIsRegistering(true); // 🌀 Show spinner
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // prevents the page from automatically reloading
-    const username = generateUsername(email);
-    localStorage.setItem('username', username);
-    navigate('/org'); // Redirect to organization selection page after login
+    try {
+      const response = await fetch("http://localhost:8080/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: registerEmail,
+          password: registerPassword,
+          username: username,
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error("Registration failed");
+      }
+
+      alert("Registration successful! Please log in.");
+      setShowRegister(false);
+    } catch (error) {
+      alert("Registration error. Please try again.");
+      console.error("Register error:", error);
+    } finally {
+      setIsRegistering(false); // 🌀 Reset spinner
+    }
   };
 
-  // JSX for the login form with Tailwind CSS styling
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Login failed");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("companyId", data.companyId);
+
+      navigate("/org");
+    } catch (error) {
+      alert("Invalid credentials or server error");
+      console.error("Login error:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-500 to-indigo-600">
       <div className="bg-white mt-5 p-8 rounded-xl shadow-xl w-full max-w-sm">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Welcome to TimeNest</h1>
-          <img src="./assets/time-nest-icon.png" alt="TimeNest Logo" />
+          <img
+            src={isRegistering ? "./assets/Spinner.gif" : "./assets/time-nest-icon.png"}
+            alt="TimeNest Logo"
+            className="mx-auto"
+          />
           <p className="text-sm text-gray-500">Manage your business schedules with ease!</p>
         </div>
 
@@ -136,9 +165,6 @@ const Login = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Login;
-
-// Note: The handleLogin function is not defined in the provided code snippet.
-// It should be defined to handle the login logic, similar to handleRegister.

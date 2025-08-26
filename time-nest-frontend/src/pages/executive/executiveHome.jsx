@@ -1,12 +1,12 @@
 import React from 'react';
 import M_navbar from '../../components/M_navbar';
 
-const ManagerHome = () => {
+const ExecutiveHome = () => {
   return (
     <>
       <M_navbar />
       <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col items-center py-8 pt-20">
-        <h1 className="text-4xl font-bold mb-6 text-indigo-900">Manager Dashboard</h1>
+        <h1 className="text-4xl font-bold mb-6 text-indigo-900">Executive Dashboard</h1>
         <h2 className="text-2xl font-bold mb-6 text-black">
           Welcome back, {localStorage.getItem('username') || "Manager"}
         </h2>
@@ -57,4 +57,4 @@ const ManagerHome = () => {
   );
 };
 
-export default ManagerHome;
+export default ExecutiveHome;

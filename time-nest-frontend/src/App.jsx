@@ -4,8 +4,8 @@ import Login from './pages/login';
 import Orginization from './pages/orginization';
 import EmployeeHome from './pages/employee/employeeHome';
 import EmployeeProfile from './pages/employee/employeeProfile';
-import ManagerHome from './pages/manager/managerHome'; 
-import ManagerProfile from './pages/manager/managerProfile';
+import ExecutiveProfile from './pages/executive/executiveProfile';
+import ExecutiveHome from './pages/executive/executiveHome';
 
 const App = () => {
   return (
@@ -16,8 +16,8 @@ const App = () => {
         <Route path="/org" element={<Orginization />} />
         <Route path="/employee/home" element={<EmployeeHome />} />
         <Route path="/employee/profile" element={<EmployeeProfile />} />
-        <Route path="/manager/home" element={<ManagerHome />} />
-        <Route path="/manager/profile" element={<ManagerProfile />} />
+        <Route path="/executive/home" element={<ExecutiveHome />} />
+        <Route path="/executive/profile" element={<ExecutiveProfile />} />
       </Routes>
     </BrowserRouter>
   );

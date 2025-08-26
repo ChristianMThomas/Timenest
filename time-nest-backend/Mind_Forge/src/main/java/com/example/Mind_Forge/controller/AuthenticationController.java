@@ -47,7 +47,12 @@ public class AuthenticationController {
     public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto lUserDto) {
         User authenticatedUser = authenticationService.authenticate(lUserDto);
         String jwtToken = jwtService.generateToken(authenticatedUser);
-        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        Long expiration = jwtService.getExpirationTime();
+
+        String role = authenticatedUser.getRole(); // "EXECUTIVE", "EMPLOYEE", or null
+        Long companyId = authenticatedUser.getCompany() != null ? authenticatedUser.getCompany().getId() : null;
+
+        LoginResponse loginResponse = new LoginResponse(jwtToken, expiration, role, companyId);
         return ResponseEntity.ok(loginResponse);
     }
 

@@ -1,89 +1,186 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const DEFAULT_COMPANY_CODE = "99999";
-const DEFAULT_COMPANY_NAME = "Testers";
 
 const Orginization = () => {
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [companyCode, setCompanyCode] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [error, setError] = useState('');
+  const [companyCode, setCompanyCode] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  //  Redirect if already in a company
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    const company = localStorage.getItem("company");
+
+    // If session is already hydrated, redirect immediately
+    if (company && role === "executive") {
+      navigate("/executive/home");
+      return;
+    } else if (company && role === "employee") {
+      navigate("/employee/home");
+      return;
+    }
+
+    // Otherwise, fetch user profile to restore session
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/users/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user profile");
+        }
+
+        const data = await response.json();
+        console.log("Restored user profile:", data);
+
+        if (data.username) localStorage.setItem("username", data.username);
+        if (data.role) localStorage.setItem("role", data.role.toLowerCase());
+        if (data.company?.name)
+          localStorage.setItem("company", data.company.name);
+        if (data.company?.id)
+          localStorage.setItem("companyId", data.company.id);
+
+        // Redirect after restoring session
+        if (data.role === "EXECUTIVE" && data.company?.name) {
+          navigate("/executive/home");
+        } else if (data.role === "EMPLOYEE" && data.company?.name) {
+          navigate("/employee/home");
+        }
+      } catch (error) {
+        console.error("Session restore error:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [navigate]);
+
+  const generateSixDigitCode = () =>
+    String(Math.floor(100000 + Math.random() * 900000));
 
   const handleJoinClick = () => {
     setShowJoinForm(true);
-    setError('');
-    setCompanyCode('');
+    setError("");
+    setCompanyCode("");
   };
 
   const handleCreateClick = () => {
     setShowCreateForm(true);
-    setCompanyName('');
-    setCompanyCode(String(Math.floor(10000 + Math.random() * 90000))); // Generate random 5-digit code
-    setError('');
+    setCompanyName("");
+    setCompanyCode(generateSixDigitCode());
+    setError("");
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (companyCode === DEFAULT_COMPANY_CODE) {
-      localStorage.setItem('company', DEFAULT_COMPANY_NAME);
-      localStorage.setItem('isManager', 'false'); // Employee joining, not manager
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8080/companies/join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ joinCode: companyCode }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid company code");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("company", data.name);
+      localStorage.setItem("role", "employee");
       setShowJoinForm(false);
-      navigate('/employee/home');
-    } else {
-      setError('Invalid company code. Please try again.');
+      navigate("/employee/home");
+    } catch (err) {
+      setError("Invalid company code. Please try again.");
+      console.error("Join error:", err);
     }
   };
 
-  const handleCreateSubmit = (e) => {
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    if (companyName.trim() && companyCode) {
-      localStorage.setItem('company', companyName.trim());
-      localStorage.setItem('companyCode', companyCode);
-      localStorage.setItem('isManager', 'true'); // Manager creating org
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8080/companies/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          name: companyName.trim(),
+          joinCode: companyCode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Company creation failed");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("company", data.name);
+      localStorage.setItem("companyCode", data.joinCode);
+      localStorage.setItem("role", "executive");
       setShowCreateForm(false);
-      navigate('/manager/home');
-    } else {
-      setError('Please enter a valid company name.');
+      navigate("/executive/home");
+    } catch (err) {
+      setError("Failed to create company. Try again.");
+      console.error("Create error:", err);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-indigo-500 relative">
-      <div className={`font-serif p-5 mx-auto text-center ${showJoinForm || showCreateForm ? 'blur-sm' : ''}`}>
+      <div
+        className={`font-serif p-5 mx-auto text-center ${
+          showJoinForm || showCreateForm ? "blur-sm" : ""
+        }`}
+      >
         <h1 className="text-white text-3xl font-serif">
           Hello👋 lets find out where you need to go.
         </h1>
         <h2 className="text-gray-400 text-lg font-serif">
           Please select your role
         </h2>
+
         <div
           className="card hover:bg-indigo-100 active:bg-indigo-200 cursor-pointer"
           onClick={handleCreateClick}
         >
-          Create Orginization
+          Create Organization
           <h3 className="text-sm text-gray-400">
-            I am a manager or business owner and want to create an orginization
+            I am a manager or business executive and want to create an
+            organization
           </h3>
-          <img 
+          <img
             src="/assets/orginization-create.png"
-            alt="Create Orginization"
+            alt="Create Organization"
             className="w-40 h-45 mx-auto my-3"
           />
         </div>
+
         <div
           className="card hover:bg-indigo-100 active:bg-indigo-200 cursor-pointer"
           onClick={handleJoinClick}
         >
-          Join Orginization
+          Join Organization
           <h3 className="text-sm text-gray-400">
-            I am an employee and want to join my orginization
+            I am an employee and want to join my organization
           </h3>
-          <img 
+          <img
             src="/assets/orginization-join.png"
-            alt="Join Orginization"
+            alt="Join Organization"
             className="w-60 h-44 mx-auto my-3"
           />
         </div>
@@ -98,7 +195,9 @@ const Orginization = () => {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-indigo-900">Join Company</h2>
+            <h2 className="text-2xl font-bold mb-4 text-indigo-900">
+              Join Company
+            </h2>
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
               <input
                 type="text"
@@ -129,7 +228,9 @@ const Orginization = () => {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-indigo-900">Create Company</h2>
+            <h2 className="text-2xl font-bold mb-4 text-indigo-900">
+              Create Company
+            </h2>
             <form onSubmit={handleCreateSubmit} className="flex flex-col gap-4">
               <input
                 type="text"
@@ -149,7 +250,7 @@ const Orginization = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setCompanyCode(String(Math.floor(10000 + Math.random() * 90000)))}
+                  onClick={() => setCompanyCode(generateSixDigitCode())}
                   className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition"
                 >
                   Generate

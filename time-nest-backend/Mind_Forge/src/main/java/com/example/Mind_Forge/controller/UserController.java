@@ -3,6 +3,7 @@ package com.example.Mind_Forge.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Mind_Forge.dto.user.UpdateUsernameDto;
 import com.example.Mind_Forge.model.User;
 import com.example.Mind_Forge.response.UserResponse;
 import com.example.Mind_Forge.service.UserService;
@@ -12,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RequestMapping("/users")
 @RestController
@@ -30,6 +33,26 @@ public class UserController {
                 currentUser.getId(),
                 currentUser.getUsername(),
                 currentUser.getEmail());
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me/username")
+    public ResponseEntity<UserResponse> updateUsername(@RequestBody UpdateUsernameDto input) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
+        String formattedUsername = input.getNewUsername().replaceAll("\\s+", "_");
+        currentUser.setUsername(formattedUsername);
+
+        User updatedUser = userService.save(currentUser);
+
+        UserResponse response = new UserResponse(
+                updatedUser.getId(),
+                updatedUser.getUsername(),
+                updatedUser.getEmail());
+
+        // Log info to see if it is fetching the actual username so we can display it to
+        // frontend
         return ResponseEntity.ok(response);
     }
 

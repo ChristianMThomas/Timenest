@@ -16,6 +16,7 @@ public class UserService {
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+    
     // Disabling this method until admins exits
     /*
      * public List<User> getAllUsers() {
@@ -24,6 +25,10 @@ public class UserService {
      * return users;
      * }
      */
+
+    public User save(User user) {
+        return userRepository.save(user);
+    }
 
     public Optional<User> findUserByEmail(String email) {
         return userRepository.findByEmail(email);

@@ -8,14 +8,14 @@ const M_navbar = () => {
     <nav className="navbar">
       <button
         className="font-semibold px-4 py-2 bg-transparent text-black border-none cursor-pointer"
-        onClick={() => navigate('/manager/home')}
+        onClick={() => navigate('/executive/home')}
       >
         Home
       </button>
     
       <button
         className="font-semibold px-4 py-2 bg-transparent text-black border-none cursor-pointer"
-        onClick={() => navigate('/manager/profile')}
+        onClick={() => navigate('/executive/profile')}
       >
         Profile
       </button>

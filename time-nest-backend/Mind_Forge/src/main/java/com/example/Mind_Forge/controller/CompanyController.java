@@ -1,8 +1,11 @@
 package com.example.Mind_Forge.controller;
 
 import com.example.Mind_Forge.dto.company.CreateCompanyDto;
+import com.example.Mind_Forge.dto.company.GetCompanyNameDto;
 import com.example.Mind_Forge.dto.company.JoinCompanyDto;
 import com.example.Mind_Forge.model.Company;
+import com.example.Mind_Forge.model.User;
+import com.example.Mind_Forge.response.CompanyNameResponse;
 import com.example.Mind_Forge.response.CompanyResponse;
 import com.example.Mind_Forge.service.CompanyService;
 
@@ -26,7 +29,7 @@ public class CompanyController {
 
     @PostMapping("/create")
     public ResponseEntity<CompanyResponse> createCompany(@RequestBody CreateCompanyDto cCompanyDto) {
-        log.info("Received request to create company: {}", cCompanyDto.getName()); // 👈 Add this
+        log.info("Received request to create company: {}", cCompanyDto.getName());
         Company createdCompany = companyService.createCompany(cCompanyDto);
         return ResponseEntity.ok(new CompanyResponse(createdCompany));
     }
@@ -35,6 +38,25 @@ public class CompanyController {
     public ResponseEntity<CompanyResponse> joinCompany(@RequestBody JoinCompanyDto jCompanyDto) {
         Company joinedCompany = companyService.joinCompany(jCompanyDto.getJoinCode());
         return ResponseEntity.ok(new CompanyResponse(joinedCompany));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<CompanyNameResponse> getCompanyName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof User)) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+
+        User currentUser = (User) principal;
+
+        if (currentUser.getCompany() == null) {
+            return ResponseEntity.notFound().build(); // No company assigned
+        }
+
+        CompanyNameResponse response = new CompanyNameResponse(currentUser.getCompany().getName());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/join")

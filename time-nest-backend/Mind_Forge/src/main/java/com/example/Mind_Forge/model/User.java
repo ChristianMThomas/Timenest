@@ -80,6 +80,10 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority(springRole));
     }
 
+    public String getActualUsername(){
+        return this.username;  // RETURN ACTUAL USERNAME (BAND-AID SO WE DONT MESS UP JWT)
+    }
+    
     @Override
     public String getUsername() {
         return this.email; // JWT subject = email

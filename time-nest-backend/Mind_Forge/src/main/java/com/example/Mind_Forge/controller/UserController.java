@@ -31,11 +31,12 @@ public class UserController {
         User currentUser = (User) authentication.getPrincipal();
         UserResponse response = new UserResponse(
                 currentUser.getId(),
-                currentUser.getUsername(),
+                currentUser.getActualUsername(),
                 currentUser.getEmail());
         return ResponseEntity.ok(response);
     }
 
+    
     @PutMapping("/me/username")
     public ResponseEntity<UserResponse> updateUsername(@RequestBody UpdateUsernameDto input) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -71,6 +72,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    
     /*
      * For secuirty reason this route will be disabled
      * 

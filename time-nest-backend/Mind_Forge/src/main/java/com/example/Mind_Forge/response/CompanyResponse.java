@@ -17,7 +17,7 @@ public class CompanyResponse {
         this.joinCode = joinCode;
     }
 
-    // ✅ Add this constructor
+
     public CompanyResponse(Company company) {
         this.name = company.getName();
         this.joinCode = company.getJoinCode();

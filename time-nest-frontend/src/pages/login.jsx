@@ -103,9 +103,8 @@ const Login = () => {
       const data = await response.json();
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
-      localStorage.setItem("company", data.company);
 
-      // 🔄 Fetch actual username from /users/me
+      //  Fetch actual username from /users/me
       const profileResponse = await fetch("http://localhost:8080/users/me", {
         method: "GET",
         headers: {
@@ -119,12 +118,37 @@ const Login = () => {
       }
 
       const profileData = await profileResponse.json();
-      console.log("Fetched profile:", profileData); // ✅ Debug log
+      console.log("Fetched profile:", profileData);
 
       if (profileData.username) {
         localStorage.setItem("username", profileData.username);
       } else {
         console.warn("Username not found in profile response");
+      }
+
+      //  Fetch company name from /companies/me
+      const companyResponse = await fetch(
+        "http://localhost:8080/companies/me",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${data.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!companyResponse.ok) {
+        throw new Error("Failed to fetch company name");
+      }
+
+      const companyData = await companyResponse.json();
+      console.log("Fetched company:", companyData);
+
+      if (companyData.name) {
+        localStorage.setItem("company", companyData.name);
+      } else {
+        console.warn("Company name not found in response");
       }
 
       navigate("/org");

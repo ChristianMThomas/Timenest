@@ -11,8 +11,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-
-import com.example.Mind_Forge.service.CompanyService;
 import com.example.Mind_Forge.service.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -47,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String path = request.getRequestURI();
 
-        // 🚫 Skip JWT validation for public endpoints
+        // Skip JWT validation for public endpoints
         if (path.startsWith("/auth/")) {
             filterChain.doFilter(request, response);
             return;

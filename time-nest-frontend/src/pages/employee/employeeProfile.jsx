@@ -1,28 +1,102 @@
 import React, { useState } from "react";
 import Navbar from "../../components/navbar";
-
-const mockUser = {
-  joinDate: "20XX-XX-XX",
-  company: localStorage.getItem('company') || "N/A",
-  profilePhoto: "/assets/user-icon.png",
-  workHistory: [
-    { date: "20XX:XX:XX", hours: 0, description: "N/A" },
-    { date: "20XX:XX:XX", hours: 0, description: "N/A" },
-    { date: "20XX:XX:XX", hours: 0, description: "N/A" },
-  ],
-};
+import { useEffect } from "react";
 
 const EmployeeProfile = () => {
-  const [username, setUsername] = useState(localStorage.getItem('username') || "Y/N");
+  const [userData, setUserData] = useState(null);
+  const [username, setUsername] = useState(
+    localStorage.getItem("username") || "Y/N"
+  );
   const [editing, setEditing] = useState(false);
+  const [userTimelogs, setUserTimeLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/users/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch user data");
+
+        const data = await response.json();
+        setUserData(data);
+        if (data.username) {
+          setUsername(data.username);
+          localStorage.setItem("username", data.username);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleUsernameChange = (e) => setUsername(e.target.value);
 
-  const handleSave = () => {
-    const formattedUsername = username.replace(/\s+/g, '_'); // Replace spaces with underscores
-    localStorage.setItem('username', formattedUsername); // Save formatted username
-    setUsername(formattedUsername); // Update state with formatted username
-    setEditing(false);
+  const handleSave = async () => {
+    const formattedUsername = username.replace(/\s+/g, "_");
+
+    try {
+      const response = await fetch("http://localhost:8080/users/me/username", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ newUsername: formattedUsername }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update username");
+
+      // ✅ Re-fetch profile to get updated username
+      const profileResponse = await fetch("http://localhost:8080/users/me", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const updatedUser = await profileResponse.json();
+      setUsername(updatedUser.username);
+      localStorage.setItem("username", updatedUser.username);
+      setUserData(updatedUser);
+      setEditing(false);
+    } catch (error) {
+      console.error("Username update error:", error);
+      alert("Could not update username. Please try again.");
+    }
+  };
+
+  const handleGetTimelogs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("http://localhost:8080/timelogs/me", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Repsonse was not ok");
+      const result = await response.json();
+      console.log(result);
+      setUserTimeLogs(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,7 +105,7 @@ const EmployeeProfile = () => {
       <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-white flex flex-col items-center pt-20">
         <div className="employee-card w-full max-w-lg flex flex-col items-center">
           <img
-            src={mockUser.profilePhoto}
+            src={userData?.profilePhoto || "/assets/user-icon.png"}
             alt="Profile"
             className="w-24 h-24 rounded-full border-4 border-black mb-4 object-cover"
           />
@@ -62,19 +136,34 @@ const EmployeeProfile = () => {
                 </button>
               </div>
             )}
-            <p className="mt-2 text-gray-600">Joined: {mockUser.joinDate}</p>
-            <p className="text-gray-600">Company: {mockUser.company}</p>
-            <button className="mt-4 px-4 py-2 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition">
-              Leave Company
+
+            <p className="text-gray-600 text-lg mt-2.5 italic">
+              Company: {localStorage.getItem("company")}
+            </p>
+            <button
+              className="mt-4 px-4 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-600 transition"
+              onClick={handleGetTimelogs}
+            >
+              View Schedule
             </button>
           </div>
         </div>
+
         <div className="employee-card w-full max-w-lg mt-6">
           <h3 className="text-xl font-bold text-black mb-4">Work History</h3>
+          {loading && <p>Fetching Work History...</p>}
+          {error && (
+            <p className="text-red-800 font-medium text-lg">Error: {error}</p>
+          )}
+          {!loading && userTimelogs.length === 0 && (
+            <p className="text-gray-500 italic">No timelogs found.</p>
+          )}
           <ul>
-            {mockUser.workHistory.map((entry, idx) => (
-              <li key={idx} className="mb-2 border-b border-gray-200 pb-2">
-                <span className="font-semibold">{entry.date}</span> — {entry.hours} hrs — {entry.description}
+            {userTimelogs.map((log, idx) => (
+              <li key={idx} className="mb-2 border-b border-gray-200 pb-2 flex flex-col m-3 p-2">
+                <span className="font-semibold">Location: {log.location}</span>{" "}
+                                                Shift Duration: {log.startTime} — {log.endTime} <br></br>
+                                                Hours: {log.hours} 
               </li>
             ))}
           </ul>
@@ -82,6 +171,17 @@ const EmployeeProfile = () => {
       </div>
     </>
   );
-}
+};
 
 export default EmployeeProfile;
+
+
+
+
+//TODO LIST 
+// MAKE TIME IN TIMEZONE BASED ON LOCATION
+// MAKE WORK HISTORY SCROLL IF TOO MANY LOGS
+// MAKE TIME CONTINUE TO TRACK EVEN NOT ON HOMEPAGE
+// IMPROVE UI
+
+

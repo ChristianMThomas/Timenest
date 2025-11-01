@@ -16,7 +16,7 @@ public class TimeLog {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "location", nullable = false)
+    @Column(name = "location")
     private String location;
 
     @Column(name = "start_time", nullable = false)
@@ -35,6 +35,16 @@ public class TimeLog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_area_id")
+    private WorkArea workArea;
+
+    @Column(name = "check_in_latitude")
+    private Double checkInLatitude;
+
+    @Column(name = "check_in_longitude")
+    private Double checkInLongitude;
 
     // Default constructor
     public TimeLog() {

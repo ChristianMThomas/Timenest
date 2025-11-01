@@ -14,6 +14,8 @@ import com.example.Mind_Forge.response.UserResponse;
 import com.example.Mind_Forge.service.AuthenticationService;
 import com.example.Mind_Forge.service.JwtService;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
@@ -45,6 +47,10 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto lUserDto) {
+        System.out.println("=== CONTROLLER RECEIVED ===");
+        System.out.println("DTO Email: " + (lUserDto.getEmail() != null ? lUserDto.getEmail() : "NULL"));
+        System.out.println("DTO Password: " + (lUserDto.getPassword() != null ? "***" : "NULL"));
+
         User authenticatedUser = authenticationService.authenticate(lUserDto);
         String jwtToken = jwtService.generateToken(authenticatedUser);
         Long expiration = jwtService.getExpirationTime();
@@ -85,4 +91,17 @@ public class AuthenticationController {
         }
 
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> payload) {
+        authenticationService.sendResetToken(payload.get("email"));
+        return ResponseEntity.ok("Reset link sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> payload) {
+        authenticationService.resetPassword(payload.get("token"), payload.get("newPassword"));
+        return ResponseEntity.ok("Password updated");
+    }
+
 }

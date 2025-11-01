@@ -3,6 +3,7 @@ package com.example.Mind_Forge.repository;
 import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.model.TimeLog;
 import com.example.Mind_Forge.model.User;
+import com.example.Mind_Forge.model.WorkArea;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,4 +22,6 @@ public interface TimeLogRepository extends CrudRepository<TimeLog, Long> {
     List<TimeLog> findByLocation(String location);
 
     List<TimeLog> findByCompany(Company company);
+
+    List<TimeLog> findByWorkArea(WorkArea workArea);
 }

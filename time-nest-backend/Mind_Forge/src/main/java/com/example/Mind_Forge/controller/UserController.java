@@ -29,10 +29,22 @@ public class UserController {
     public ResponseEntity<UserResponse> authenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
+
+        // Include company information if user belongs to a company
+        UserResponse.CompanyInfo companyInfo = null;
+        if (currentUser.getCompany() != null) {
+            companyInfo = new UserResponse.CompanyInfo(
+                currentUser.getCompany().getId(),
+                currentUser.getCompany().getName()
+            );
+        }
+
         UserResponse response = new UserResponse(
                 currentUser.getId(),
                 currentUser.getActualUsername(),
-                currentUser.getEmail());
+                currentUser.getEmail(),
+                currentUser.getRole(),
+                companyInfo);
         return ResponseEntity.ok(response);
     }
 
@@ -47,13 +59,22 @@ public class UserController {
 
         User updatedUser = userService.save(currentUser);
 
+        // Include company information if user belongs to a company
+        UserResponse.CompanyInfo companyInfo = null;
+        if (updatedUser.getCompany() != null) {
+            companyInfo = new UserResponse.CompanyInfo(
+                updatedUser.getCompany().getId(),
+                updatedUser.getCompany().getName()
+            );
+        }
+
         UserResponse response = new UserResponse(
                 updatedUser.getId(),
-                updatedUser.getUsername(),
-                updatedUser.getEmail());
+                updatedUser.getActualUsername(),
+                updatedUser.getEmail(),
+                updatedUser.getRole(),
+                companyInfo);
 
-        // Log info to see if it is fetching the actual username so we can display it to
-        // frontend
         return ResponseEntity.ok(response);
     }
 

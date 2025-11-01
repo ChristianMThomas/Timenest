@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDarkMode } from "../context/DarkModeContext";
 
 const Orginization = () => {
+  const { isDarkMode } = useDarkMode();
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [companyCode, setCompanyCode] = useState("");
@@ -141,127 +143,223 @@ const Orginization = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-indigo-500 relative">
+    <div className={`min-h-screen flex items-center justify-center relative px-4 transition-colors duration-300 ${
+      isDarkMode
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100'
+    }`}>
       <div
-        className={`font-serif p-5 mx-auto text-center ${
+        className={`w-full max-w-5xl mx-auto text-center transition-all duration-300 ${
           showJoinForm || showCreateForm ? "blur-sm" : ""
         }`}
       >
-        <h1 className="text-white text-3xl font-serif">
-          Hello👋 lets find out where you need to go.
-        </h1>
-        <h2 className="text-gray-400 text-lg font-serif">
-          Please select your role
-        </h2>
-
-        <div
-          className="card hover:bg-indigo-100 active:bg-indigo-200 cursor-pointer"
-          onClick={handleCreateClick}
-        >
-          Create Organization
-          <h3 className="text-sm text-gray-400">
-            I am a manager or business executive and want to create an
-            organization
-          </h3>
-          <img
-            src="/assets/orginization-create.png"
-            alt="Create Organization"
-            className="w-40 h-45 mx-auto my-3"
-          />
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-center mb-6">
+            <img
+              src="/assets/time-nest-icon.png"
+              alt="TimeNest"
+              className="h-20 w-20"
+            />
+          </div>
+          <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            Welcome to TimeNest!
+          </h1>
+          <p className="text-2xl text-gray-600 font-medium">
+            Let's get you started on your journey
+          </p>
+          <p className="text-lg text-gray-500 mt-2">
+            Choose your role to continue
+          </p>
         </div>
 
-        <div
-          className="card hover:bg-indigo-100 active:bg-indigo-200 cursor-pointer"
-          onClick={handleJoinClick}
-        >
-          Join Organization
-          <h3 className="text-sm text-gray-400">
-            I am an employee and want to join my organization
-          </h3>
-          <img
-            src="/assets/orginization-join.png"
-            alt="Join Organization"
-            className="w-60 h-44 mx-auto my-3"
-          />
+        {/* Role Selection Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Create Organization Card */}
+          <div
+            className="bg-white rounded-3xl shadow-2xl p-8 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-purple-200 border-4 border-transparent hover:border-purple-500"
+            onClick={handleCreateClick}
+          >
+            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-4 text-indigo-900">
+              Create Organization
+            </h2>
+            <p className="text-gray-600 text-lg mb-6">
+              I'm a manager or business executive looking to create and manage my team
+            </p>
+            <img
+              src="/assets/orginization-create.png"
+              alt="Create Organization"
+              className="w-48 h-48 mx-auto object-contain mb-4"
+            />
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-full font-bold text-lg inline-block">
+              Get Started
+            </div>
+          </div>
+
+          {/* Join Organization Card */}
+          <div
+            className="bg-white rounded-3xl shadow-2xl p-8 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-blue-200 border-4 border-transparent hover:border-blue-500"
+            onClick={handleJoinClick}
+          >
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-4 text-blue-900">
+              Join Organization
+            </h2>
+            <p className="text-gray-600 text-lg mb-6">
+              I'm an employee ready to join my company and start tracking time
+            </p>
+            <img
+              src="/assets/orginization-join.png"
+              alt="Join Organization"
+              className="w-48 h-48 mx-auto object-contain mb-4"
+            />
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-6 py-3 rounded-full font-bold text-lg inline-block">
+              Join Now
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Join Company Modal */}
       {showJoinForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-xl shadow-xl p-8 relative w-full max-w-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 relative w-full max-w-md border-4 border-blue-200">
             <button
-              className="absolute top-2 right-2 text-xl font-bold text-gray-500 hover:text-black"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
               onClick={() => setShowJoinForm(false)}
             >
-              &times;
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-indigo-900">
-              Join Company
-            </h2>
-            <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-              <input
-                type="text"
-                placeholder="Enter company code"
-                className="px-4 py-2 border border-gray-300 rounded-md outline-none"
-                value={companyCode}
-                onChange={(e) => setCompanyCode(e.target.value)}
-                required
-              />
-              {error && <p className="text-red-600 text-sm">{error}</p>}
+
+            <div className="text-center mb-6">
+              <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                Join Your Company
+              </h2>
+              <p className="text-gray-600">Enter the code provided by your manager</p>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+              <div>
+                <label className="block text-gray-700 font-bold mb-2 text-left">
+                  Company Join Code
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  className="w-full px-6 py-4 border-2 border-blue-200 rounded-xl outline-none focus:border-blue-500 transition-colors text-center text-2xl font-mono font-bold"
+                  value={companyCode}
+                  onChange={(e) => setCompanyCode(e.target.value)}
+                  maxLength="6"
+                  required
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
               <button
                 type="submit"
-                className="py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition"
+                className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold text-xl rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
-                Join
+                Join Company
               </button>
             </form>
           </div>
         </div>
       )}
 
+      {/* Create Company Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-xl shadow-xl p-8 relative w-full max-w-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 relative w-full max-w-md border-4 border-purple-200">
             <button
-              className="absolute top-2 right-2 text-xl font-bold text-gray-500 hover:text-black"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
               onClick={() => setShowCreateForm(false)}
             >
-              &times;
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-indigo-900">
-              Create Company
-            </h2>
-            <form onSubmit={handleCreateSubmit} className="flex flex-col gap-4">
-              <input
-                type="text"
-                placeholder="Enter company name"
-                className="px-4 py-2 border border-gray-300 rounded-md outline-none"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                required
-              />
-              <div className="flex gap-2">
+
+            <div className="text-center mb-6">
+              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                Create Your Company
+              </h2>
+              <p className="text-gray-600">Set up your organization to manage your team</p>
+            </div>
+
+            <form onSubmit={handleCreateSubmit} className="space-y-6">
+              <div>
+                <label className="block text-gray-700 font-bold mb-2 text-left">
+                  Company Name
+                </label>
                 <input
                   type="text"
-                  placeholder="Company code"
-                  className="px-4 py-2 border border-gray-300 rounded-md outline-none flex-1"
-                  value={companyCode}
-                  readOnly
+                  placeholder="Enter your company name"
+                  className="w-full px-6 py-4 border-2 border-purple-200 rounded-xl outline-none focus:border-purple-500 transition-colors text-lg"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={() => setCompanyCode(generateSixDigitCode())}
-                  className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition"
-                >
-                  Generate
-                </button>
               </div>
-              {error && <p className="text-red-600 text-sm">{error}</p>}
+
+              <div>
+                <label className="block text-gray-700 font-bold mb-2 text-left">
+                  Employee Join Code
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 px-6 py-4 border-2 border-purple-200 rounded-xl bg-purple-50 text-center text-2xl font-mono font-bold text-purple-700"
+                    value={companyCode}
+                    readOnly
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCompanyCode(generateSixDigitCode())}
+                    className="px-6 py-4 bg-purple-100 text-purple-700 font-bold rounded-xl hover:bg-purple-200 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-left">Share this code with your employees to let them join</p>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition"
+                className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xl rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
-                Create
+                Create Company
               </button>
             </form>
           </div>

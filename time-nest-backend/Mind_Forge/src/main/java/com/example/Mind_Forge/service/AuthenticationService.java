@@ -3,6 +3,9 @@ package com.example.Mind_Forge.service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
+
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,8 +16,10 @@ import com.example.Mind_Forge.dto.user.RegisterUserDto;
 import com.example.Mind_Forge.dto.user.UpdateUserDto;
 import com.example.Mind_Forge.dto.user.VerifyUserDto;
 import com.example.Mind_Forge.model.Company;
+import com.example.Mind_Forge.model.PasswordResetToken;
 import com.example.Mind_Forge.model.User;
 import com.example.Mind_Forge.repository.CompanyRepository;
+import com.example.Mind_Forge.repository.PasswordResetTokenRepository;
 import com.example.Mind_Forge.repository.UserRepository;
 
 import jakarta.mail.MessagingException;
@@ -26,31 +31,67 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final CompanyRepository companyRepository;
+    private final PasswordResetTokenRepository tokenRepository;
+    private final org.springframework.mail.javamail.JavaMailSender mailSender;
 
     public AuthenticationService(UserRepository userRepository, CompanyRepository companyRepository,
             PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager, EmailService emailService) {
+            AuthenticationManager authenticationManager, EmailService emailService,
+            PasswordResetTokenRepository tokenRepository,
+            org.springframework.mail.javamail.JavaMailSender mailSender) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
         this.companyRepository = companyRepository;
+        this.mailSender = mailSender;
+        this.tokenRepository = tokenRepository;
     }
 
     public User register(RegisterUserDto input) {
-        User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()),
-                "USER");
+        // Normalize email to lowercase and trim whitespace
+        String normalizedEmail = input.getEmail().trim().toLowerCase();
+
+        System.out.println("=== REGISTRATION DEBUG ===");
+        System.out.println("Registering user with email: " + normalizedEmail);
+        System.out.println("Username: " + input.getUsername());
+
+        // Check if user already exists
+        Optional<User> existingUser = userRepository.findByEmail(normalizedEmail);
+        if (existingUser.isPresent()) {
+            System.out.println("ERROR: User already exists with email: " + normalizedEmail);
+            throw new RuntimeException("User already exists with this email!");
+        }
+
+        User user = new User(input.getUsername(), normalizedEmail, passwordEncoder.encode(input.getPassword()),
+                "user");
         user.setVerificationCode(generateVerificationCode());
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-        user.setEnabled(false);
+        user.setEnabled(true); // Changed to true for development - CHANGE BACK TO false IN PRODUCTION!
 
         sendVerificationEmail(user);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        System.out.println("User registered successfully with ID: " + savedUser.getId());
+        return savedUser;
     }
 
     public User authenticate(LoginUserDto input) {
-        User user = userRepository.findByEmail(input.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+        System.out.println("=== AUTHENTICATION DEBUG ===");
+        System.out.println("Attempting to authenticate user with email: " + input.getEmail());
+
+        // Trim and lowercase the email to avoid issues
+        String email = input.getEmail().trim().toLowerCase();
+        System.out.println("Normalized email: " + email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    System.out.println("ERROR: User not found in database for email: " + email);
+                    return new RuntimeException("User not found! Please check your email and try again.");
+                });
+
+        System.out.println("User found: " + user.getEmail());
+        System.out.println("User enabled: " + user.isEnabled());
+        System.out.println("User role: " + user.getRole());
 
         if (!user.isEnabled()) {
             throw new RuntimeException("Account not verified! Please verify your account.");
@@ -58,9 +99,10 @@ public class AuthenticationService {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        input.getEmail(), input.getPassword()));
-        return user;
+                        email, input.getPassword()));
 
+        System.out.println("Authentication successful!");
+        return user;
     }
 
     public void verifyUser(VerifyUserDto input) {
@@ -161,6 +203,38 @@ public class AuthenticationService {
 
         user.setPassword(passwordEncoder.encode(input.getNewPassword()));
         userRepository.save(user);
+    }
+
+    public void sendResetToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+        tokenRepository.save(resetToken);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Reset your Timenest password");
+        message.setText("Click to reset: https://timenest.com/auth/reset-password?token=" + token);
+        mailSender.send(message);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        tokenRepository.delete(resetToken);
     }
 
 }

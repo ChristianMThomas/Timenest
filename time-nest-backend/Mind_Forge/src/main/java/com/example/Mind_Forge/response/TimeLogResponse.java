@@ -27,7 +27,7 @@ public class TimeLogResponse {
             log.getStartTime(),
             log.getEndTime(),
             log.getHours(),
-            log.getUser().getUsername()
+            log.getUser().getActualUsername()  // Use actual username, not email
         );
     }
 }

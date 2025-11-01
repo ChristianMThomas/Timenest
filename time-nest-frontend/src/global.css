@@ -60,3 +60,54 @@
         bottom: auto;
     }
 }
+
+/* Animated Blob Effects for Login Page */
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+    animation-delay: 4s;
+}
+
+/* Dark Mode Styles */
+.dark-mode-bg {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+}
+
+.dark-mode-card {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+}
+
+.dark-mode-text {
+    color: #f3f4f6;
+}
+
+.dark-mode-text-secondary {
+    color: #9ca3af;
+}
+
+.dark-mode-border {
+    border-color: #374151;
+}

@@ -15,6 +15,9 @@ public class CreateTimeLogDto {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Double hours;
+    private Long workAreaId;
+    private Double checkInLatitude;
+    private Double checkInLongitude;
 
     // Getters and setters or use Lombok
 }

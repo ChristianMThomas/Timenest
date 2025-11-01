@@ -14,6 +14,7 @@ import com.example.Mind_Forge.dto.timelog.UpdateTimeLogDto;
 import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.model.TimeLog;
 import com.example.Mind_Forge.model.User;
+import com.example.Mind_Forge.model.WorkArea;
 import com.example.Mind_Forge.repository.CompanyRepository;
 import com.example.Mind_Forge.repository.TimeLogRepository;
 import com.example.Mind_Forge.repository.UserRepository;
@@ -26,13 +27,16 @@ public class TimeLogService {
     private final TimeLogRepository timeLogRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
+    private final WorkAreaService workAreaService;
 
     public TimeLogService(TimeLogRepository timeLogRepository,
             UserRepository userRepository,
-            CompanyRepository companyRepository) {
+            CompanyRepository companyRepository,
+            WorkAreaService workAreaService) {
         this.timeLogRepository = timeLogRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
+        this.workAreaService = workAreaService;
     }
 
     private User getAuthenticatedUser() {
@@ -61,11 +65,42 @@ public class TimeLogService {
 
         TimeLog timeLog = new TimeLog();
         timeLog.setUser(user);
-        timeLog.setLocation(input.getLocation());
         timeLog.setStartTime(input.getStartTime());
         timeLog.setEndTime(input.getEndTime());
         timeLog.setHours(input.getHours());
         timeLog.setCompany(user.getCompany());
+
+        // Handle work area and geofence validation
+        if (input.getWorkAreaId() != null) {
+            if (input.getCheckInLatitude() == null || input.getCheckInLongitude() == null) {
+                throw new IllegalArgumentException("Check-in coordinates are required when logging time at a work area");
+            }
+
+            // Validate geofence - throws exception if not within range
+            workAreaService.validateGeofence(
+                    input.getWorkAreaId(),
+                    input.getCheckInLatitude(),
+                    input.getCheckInLongitude());
+
+            // Get the work area and set it on the time log
+            WorkArea workArea = workAreaService.getWorkAreaById(input.getWorkAreaId());
+            timeLog.setWorkArea(workArea);
+            timeLog.setCheckInLatitude(input.getCheckInLatitude());
+            timeLog.setCheckInLongitude(input.getCheckInLongitude());
+
+            // Set location from work area name if not provided
+            if (input.getLocation() == null || input.getLocation().isBlank()) {
+                timeLog.setLocation(workArea.getName());
+            } else {
+                timeLog.setLocation(input.getLocation());
+            }
+
+            logger.info("Employee '{}' clocked in at work area '{}' (distance validated)",
+                    user.getEmail(), workArea.getName());
+        } else {
+            // Legacy support: allow location without work area
+            timeLog.setLocation(input.getLocation());
+        }
 
         return timeLogRepository.save(timeLog);
     }

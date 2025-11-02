@@ -60,8 +60,10 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-            // Production
+            // Production (both www and non-www)
+            "https://timenest.tech",
             "https://www.timenest.tech",
+            "http://timenest.tech",
             "http://www.timenest.tech",
             // Development/Testing
             "http://localhost:5173",  // Vite dev server

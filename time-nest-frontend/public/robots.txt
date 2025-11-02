@@ -6,4 +6,4 @@ Disallow: /executive/
 Disallow: /org
 
 # Sitemap
-Sitemap: https://www.timenest.tech/sitemap.xml
+Sitemap: https://timenest.tech/sitemap.xml

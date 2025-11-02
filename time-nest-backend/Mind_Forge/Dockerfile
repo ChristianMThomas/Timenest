@@ -1,11 +1,11 @@
 # Use an official OpenJDK image
 FROM openjdk:17-jdk-slim
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy the built jar file into the container
-COPY target/*.jar app.jar
+# Copy the built JAR file from your Maven project folder
+COPY Mind_Forge/target/*.jar app.jar
 
-# Run the jar file
+# Run the JAR file
 CMD ["java", "-jar", "app.jar"]

@@ -1,0 +1,4 @@
+# Netlify/Vercel SPA redirect rules
+# This ensures all routes work properly with React Router
+
+/*    /index.html   200

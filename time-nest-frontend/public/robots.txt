@@ -1,0 +1,9 @@
+# robots.txt for TimeNest
+User-agent: *
+Allow: /
+Disallow: /employee/
+Disallow: /executive/
+Disallow: /org
+
+# Sitemap
+Sitemap: https://www.timenest.tech/sitemap.xml

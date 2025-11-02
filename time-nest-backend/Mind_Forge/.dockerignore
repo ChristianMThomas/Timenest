@@ -1,0 +1,66 @@
+# Build artifacts
+target/
+*.jar
+*.war
+*.class
+*.log
+
+# Maven wrapper (using system Maven instead)
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+.metadata/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (not needed in container)
+README.md
+CLAUDE.md
+*.md
+docs/
+
+# Test reports and coverage
+test-output/
+coverage/
+*.log
+
+# Environment files (use Railway env vars instead)
+.env
+.env.local
+.env.*.local
+application-local.properties
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# Docker files (don't copy into image)
+Dockerfile
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile

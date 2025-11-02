@@ -2,8 +2,8 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /build
 
-# Copy your Maven project including wrapper and pom.xml
-COPY Mind_Forge/ ./
+# Copy everything from the current folder (Mind_Forge)
+COPY . ./
 
 # Use Maven wrapper if present, fallback to system Maven
 RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests

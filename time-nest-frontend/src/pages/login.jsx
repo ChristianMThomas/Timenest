@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -40,7 +41,7 @@ const Login = () => {
     setIsRegistering(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,7 +70,7 @@ const Login = () => {
     setIsRegistering(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/verify", {
+      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,8 +102,10 @@ const Login = () => {
     console.log("Password:", password ? "***" : "(empty)");
     console.log("Request body:", JSON.stringify({ email, password }));
 
+    setIsRegistering(true);
+
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -119,7 +122,7 @@ const Login = () => {
       localStorage.setItem("role", data.role);
 
       //  Fetch actual username from /users/me
-      const profileResponse = await fetch("http://localhost:8080/users/me", {
+      const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${data.token}`,
@@ -142,7 +145,7 @@ const Login = () => {
 
       //  Fetch company name from /companies/me (optional - user might not have joined a company yet)
       const companyResponse = await fetch(
-        "http://localhost:8080/companies/me",
+        `${API_BASE_URL}/companies/me`,
         {
           method: "GET",
           headers: {
@@ -176,6 +179,8 @@ const Login = () => {
     } catch (error) {
       alert(`Login failed: ${error.message}`);
       console.error("Login error:", error);
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -184,7 +189,7 @@ const Login = () => {
     setIsRegistering(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/forgot-password", {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -216,7 +221,7 @@ const Login = () => {
     setIsRegistering(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/reset-password", {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: resetToken, newPassword: newPassword }),
@@ -241,6 +246,20 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-hidden">
+      {/* Loading Spinner Overlay */}
+      {isRegistering && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center space-y-4">
+            <img
+              src="./assets/Spinner.gif"
+              alt="Loading..."
+              className="w-24 h-24"
+            />
+            <p className="text-xl font-bold text-gray-700">Processing...</p>
+          </div>
+        </div>
+      )}
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-4"></div>

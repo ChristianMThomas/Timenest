@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import M_navbar from '../../components/M_navbar';
 import { useDarkMode } from '../../context/DarkModeContext';
+import { API_BASE_URL } from '../../config/api';
 
 const ExecutiveHome = () => {
   const { isDarkMode } = useDarkMode();
@@ -24,7 +25,7 @@ const ExecutiveHome = () => {
     setError(null);
     try {
       // Fetch user data to get company info
-      const userResponse = await fetch("http://localhost:8080/users/me", {
+      const userResponse = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -37,7 +38,7 @@ const ExecutiveHome = () => {
 
       // Fetch company info
       const companyResponse = await fetch(
-        `http://localhost:8080/companies/${userData.company?.id}`,
+        `${API_BASE_URL}/companies/${userData.company?.id}`,
         {
           method: "GET",
           headers: {
@@ -54,7 +55,7 @@ const ExecutiveHome = () => {
 
       // Fetch company timelogs
       const timelogsResponse = await fetch(
-        `http://localhost:8080/timelogs/company/${userData.company?.id}`,
+        `${API_BASE_URL}/timelogs/company/${userData.company?.id}`,
         {
           method: "GET",
           headers: {

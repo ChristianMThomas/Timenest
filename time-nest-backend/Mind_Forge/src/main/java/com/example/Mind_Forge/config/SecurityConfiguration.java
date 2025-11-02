@@ -59,7 +59,14 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://www.timenest.tech", "http://www.timenest.tech"));
+        config.setAllowedOrigins(List.of(
+            // Production
+            "https://www.timenest.tech",
+            "http://www.timenest.tech",
+            // Development/Testing
+            "http://localhost:5173",  // Vite dev server
+            "http://localhost:4173"   // Vite preview server
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true); // Important for cookies or auth headers

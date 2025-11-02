@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Navbar from "../../components/navbar";
 import { useEffect } from "react";
 import { useDarkMode } from "../../context/DarkModeContext";
+import { API_BASE_URL } from "../../config/api";
 
 const EmployeeProfile = () => {
   const { isDarkMode } = useDarkMode();
@@ -26,7 +27,7 @@ const EmployeeProfile = () => {
     //Async function to GET the user's data from backend
     const fetchUserData = async () => {
       try {
-        const response = await fetch("http://localhost:8080/users/me", {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -62,7 +63,7 @@ const EmployeeProfile = () => {
     const formattedUsername = username.replace(/\s+/g, "_");
 
     try {
-      const response = await fetch("http://localhost:8080/users/me/username", {
+      const response = await fetch(`${API_BASE_URL}/users/me/username`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -74,7 +75,7 @@ const EmployeeProfile = () => {
       if (!response.ok) throw new Error("Failed to update username");
 
       //  Re-fetch profile to get updated username
-      const profileResponse = await fetch("http://localhost:8080/users/me", {
+      const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -98,7 +99,7 @@ const EmployeeProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8080/timelogs/me", {
+      const response = await fetch(`${API_BASE_URL}/timelogs/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

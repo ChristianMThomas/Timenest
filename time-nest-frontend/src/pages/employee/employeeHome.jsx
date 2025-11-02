@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Navbar from "../../components/navbar";
 import { useDarkMode } from "../../context/DarkModeContext";
+import { API_BASE_URL } from "../../config/api";
 
 const EmployeeHome = () => {
   const { isDarkMode } = useDarkMode();
@@ -42,7 +43,7 @@ const EmployeeHome = () => {
 
   const fetchWorkAreas = async () => {
     try {
-      const response = await fetch("http://localhost:8080/workareas/active", {
+      const response = await fetch(`${API_BASE_URL}/workareas/active`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -215,7 +216,7 @@ const EmployeeHome = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("http://localhost:8080/timelogs", {
+      const response = await fetch(`${API_BASE_URL}/timelogs`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

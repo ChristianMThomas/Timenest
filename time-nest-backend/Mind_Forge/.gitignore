@@ -35,5 +35,7 @@ build/
 # Ignore backend environment config
 src/main/resources/.env.properties
 
-
-
+# Claude Code files
+CLAUDE.md
+.claude/
+.claude-code/

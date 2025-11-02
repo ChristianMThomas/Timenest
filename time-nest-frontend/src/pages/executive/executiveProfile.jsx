@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import M_navbar from "../../components/M_navbar";
 import { useNavigate } from "react-router-dom";
 import { useDarkMode } from "../../context/DarkModeContext";
+import { API_BASE_URL } from "../../config/api";
 
 const ExecutiveProfile = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const ExecutiveProfile = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch("http://localhost:8080/users/me", {
+      const response = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -45,7 +46,7 @@ const ExecutiveProfile = () => {
       // Fetch company info
       if (data.company?.id) {
         const companyResponse = await fetch(
-          `http://localhost:8080/companies/${data.company.id}`,
+          `${API_BASE_URL}/companies/${data.company.id}`,
           {
             method: "GET",
             headers: {
@@ -71,7 +72,7 @@ const ExecutiveProfile = () => {
     const formattedUsername = username.replace(/\s+/g, "_");
 
     try {
-      const response = await fetch("http://localhost:8080/users/me/username", {
+      const response = await fetch(`${API_BASE_URL}/users/me/username`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -83,7 +84,7 @@ const ExecutiveProfile = () => {
       if (!response.ok) throw new Error("Failed to change username");
 
       //  Re-fetch profile to get updated username
-      const profileResponse = await fetch("http://localhost:8080/users/me", {
+      const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -106,7 +107,7 @@ const ExecutiveProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8080/timelogs/me", {
+      const response = await fetch(`${API_BASE_URL}/timelogs/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -127,7 +128,7 @@ const ExecutiveProfile = () => {
   const handleDisbandCompany = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8080/companies/${companyInfo.id}`,
+        `${API_BASE_URL}/companies/${companyInfo.id}`,
         {
           method: "DELETE",
           headers: {

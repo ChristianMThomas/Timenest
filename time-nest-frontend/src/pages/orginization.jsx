@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDarkMode } from "../context/DarkModeContext";
+import { API_BASE_URL } from "../config/api";
 
 const Orginization = () => {
   const { isDarkMode } = useDarkMode();
@@ -9,6 +10,7 @@ const Orginization = () => {
   const [companyCode, setCompanyCode] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   //  Redirect if already in a company
@@ -28,7 +30,7 @@ const Orginization = () => {
     // Otherwise, fetch user profile to restore session
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch("http://localhost:8080/users/me", {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -83,9 +85,10 @@ const Orginization = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/companies/join", {
+      const response = await fetch(`${API_BASE_URL}/companies/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -106,15 +109,18 @@ const Orginization = () => {
     } catch (err) {
       setError("Invalid company code. Please try again.");
       console.error("Join error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/companies/create", {
+      const response = await fetch(`${API_BASE_URL}/companies/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,6 +145,8 @@ const Orginization = () => {
     } catch (err) {
       setError("Failed to create company. Try again.");
       console.error("Create error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -148,6 +156,20 @@ const Orginization = () => {
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
         : 'bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100'
     }`}>
+      {/* Loading Spinner Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center space-y-4">
+            <img
+              src="/assets/Spinner.gif"
+              alt="Loading..."
+              className="w-24 h-24"
+            />
+            <p className="text-xl font-bold text-gray-700">Processing...</p>
+          </div>
+        </div>
+      )}
+
       <div
         className={`w-full max-w-5xl mx-auto text-center transition-all duration-300 ${
           showJoinForm || showCreateForm ? "blur-sm" : ""

@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from "react-lea
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useDarkMode } from "../../context/DarkModeContext";
+import { API_BASE_URL } from "../../config/api";
 
 // Fix for default marker icon in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,7 +38,7 @@ const ExecutiveWorkAreas = () => {
   const fetchWorkAreas = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/workareas", {
+      const response = await fetch(`${API_BASE_URL}/workareas`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -61,7 +62,7 @@ const ExecutiveWorkAreas = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:8080/workareas", {
+      const response = await fetch(`${API_BASE_URL}/workareas`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -86,7 +87,7 @@ const ExecutiveWorkAreas = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`http://localhost:8080/workareas/${selectedArea.id}`, {
+      const response = await fetch(`${API_BASE_URL}/workareas/${selectedArea.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -112,7 +113,7 @@ const ExecutiveWorkAreas = () => {
     if (!confirm("Are you sure you want to permanently delete this work area? This action cannot be undone.")) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/workareas/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/workareas/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -22,7 +22,7 @@ import com.example.Mind_Forge.repository.CompanyRepository;
 import com.example.Mind_Forge.repository.PasswordResetTokenRepository;
 import com.example.Mind_Forge.repository.UserRepository;
 
-import jakarta.mail.MessagingException;
+import java.io.IOException;
 
 @Service
 public class AuthenticationService {
@@ -171,7 +171,7 @@ public class AuthenticationService {
 
         try {
             emailService.sendVerificationEmail(user.getEmail(), subject, htmlMsg);
-        } catch (MessagingException exception) {
+        } catch (IOException exception) {
             exception.printStackTrace();
         }
     }

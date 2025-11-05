@@ -67,7 +67,7 @@ public class AuthenticationService {
                 "user");
         user.setVerificationCode(generateVerificationCode());
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-        user.setEnabled(true); // Changed to true for development - CHANGE BACK TO false IN PRODUCTION!
+        user.setEnabled(false); // Users must verify their email before they can log in
 
         sendVerificationEmail(user);
         User savedUser = userRepository.save(user);
@@ -150,7 +150,7 @@ public class AuthenticationService {
                 + "<div style=\"font-size:26px; color:#3b82f6; font-weight:600; margin-bottom:10px;\">Timenest</div>"
                 + "<div style=\"font-size:22px; font-weight:500; color:#111827;\">Verify Your Email</div>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">Hello! We're excited to have you. Please use the verification code below to complete your registration.</div>"
-                + "<div style=\"font-size:32px; font-weight:bold; letter-spacing:4px; color:#fffff; background-color:#3b82f6; padding:10px 20px; border-radius:8px; display:inline-block; margin-bottom:20px;\">"
+                + "<div style=\"font-size:32px; font-weight:bold; letter-spacing:4px; color:#ffffff; background-color:#3b82f6; padding:10px 20px; border-radius:8px; display:inline-block; margin-bottom:20px;\">"
                 + VerificationCode + "</div>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">This code is valid for the next 15 minutes.</div>"
                 + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request this code, feel free to ignore this message.<br /> Mind-Forge LLC</div>"
@@ -219,7 +219,7 @@ public class AuthenticationService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setSubject("Reset your Timenest password");
-        message.setText("Click to reset: https://timenest.com/auth/reset-password?token=" + token);
+        message.setText("Click to reset: https://timenest.tech/auth/reset-password?token=" + token);
         mailSender.send(message);
     }
 

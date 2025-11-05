@@ -69,9 +69,20 @@ public class AuthenticationService {
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(false); // Users must verify their email before they can log in
 
-        sendVerificationEmail(user);
+        // Save user to database FIRST (before email attempt)
         User savedUser = userRepository.save(user);
         System.out.println("User registered successfully with ID: " + savedUser.getId());
+
+        // Try to send verification email (non-blocking - user is already saved)
+        try {
+            sendVerificationEmail(savedUser);
+            System.out.println("Verification email sent successfully to: " + savedUser.getEmail());
+        } catch (Exception e) {
+            System.err.println("WARNING: Failed to send verification email to: " + savedUser.getEmail());
+            System.err.println("Error: " + e.getMessage());
+            // User is still registered, they can request a resend later
+        }
+
         return savedUser;
     }
 

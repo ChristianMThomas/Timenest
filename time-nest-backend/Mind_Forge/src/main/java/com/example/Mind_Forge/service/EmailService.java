@@ -20,6 +20,7 @@ public class EmailService {
         MimeMessage msg = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(msg, true);
 
+        helper.setFrom("noreply@infinitetechteam.com");
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(text, true);

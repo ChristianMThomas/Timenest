@@ -175,7 +175,7 @@ const M_navbar = () => {
 
       {/* Mobile Menu Dropdown with Smooth Animation */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out relative z-50 ${
           mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         } border-t-2 ${
           isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
@@ -243,15 +243,6 @@ const M_navbar = () => {
           </button>
         </div>
       </div>
-
-      {/* Backdrop Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
-          onClick={() => setMobileMenuOpen(false)}
-          style={{ top: '80px' }}
-        />
-      )}
     </nav>
   );
 };

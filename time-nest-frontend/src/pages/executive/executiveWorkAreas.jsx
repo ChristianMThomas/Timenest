@@ -213,12 +213,12 @@ const ExecutiveWorkAreas = () => {
       }`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-5xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          <div className="mb-8">
+            <div className="mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Work Area Management
               </h1>
-              <p className={`mt-2 text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className={`mt-2 text-base md:text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 Create and manage geofenced work locations
               </p>
             </div>
@@ -227,9 +227,9 @@ const ExecutiveWorkAreas = () => {
                 resetForm();
                 setShowCreateModal(true);
               }}
-              className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg inline-flex items-center"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-base sm:text-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg inline-flex items-center justify-center"
             >
-              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
               </svg>
               Create Work Area
@@ -261,17 +261,17 @@ const ExecutiveWorkAreas = () => {
                       : 'border-red-300 bg-gray-50 opacity-60'
                   }`}
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent break-words">
                         {area.name}
                       </h3>
                       {area.address && (
-                        <p className="text-gray-600 mt-1">{area.address}</p>
+                        <p className="text-gray-600 text-sm sm:text-base mt-1 break-words">{area.address}</p>
                       )}
                     </div>
                     <span
-                      className={`px-4 py-2 rounded-full text-sm font-bold ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap self-start ${
                         area.active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-red-100 text-red-700'
@@ -320,21 +320,21 @@ const ExecutiveWorkAreas = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => openEditModal(area)}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all inline-flex items-center justify-center"
+                      className="flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-sm sm:text-base hover:from-blue-600 hover:to-blue-700 transition-all inline-flex items-center justify-center"
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                       Edit
                     </button>
                     <button
                       onClick={() => handleDeleteWorkArea(area.id)}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold hover:from-red-600 hover:to-red-700 transition-all inline-flex items-center justify-center"
+                      className="flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold text-sm sm:text-base hover:from-red-600 hover:to-red-700 transition-all inline-flex items-center justify-center"
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                       Delete
@@ -349,8 +349,8 @@ const ExecutiveWorkAreas = () => {
 
       {/* Create Work Area Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[998] p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 relative w-full max-w-4xl my-8 border-4 border-green-200 z-[999]">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[998] p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 relative w-full max-w-4xl my-4 sm:my-8 border-2 sm:border-4 border-green-200 z-[999]">
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-[1000]"
               onClick={() => setShowCreateModal(false)}
@@ -360,11 +360,11 @@ const ExecutiveWorkAreas = () => {
               </svg>
             </button>
 
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
+            <div className="text-center mb-4 sm:mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
                 Create Work Area
               </h2>
-              <p className="text-gray-600">Define a new geofenced work location</p>
+              <p className="text-sm sm:text-base text-gray-600">Define a new geofenced work location</p>
             </div>
 
             <form onSubmit={handleCreateWorkArea} className="space-y-6">
@@ -451,8 +451,8 @@ const ExecutiveWorkAreas = () => {
 
               {/* Interactive Map */}
               <div>
-                <label className="block text-gray-700 font-bold mb-2">Click on map to set location</label>
-                <div className="h-96 rounded-2xl overflow-hidden border-4 border-green-200 relative z-[1]">
+                <label className="block text-gray-700 font-bold mb-2 text-sm sm:text-base">Click on map to set location</label>
+                <div className="h-64 sm:h-80 md:h-96 rounded-2xl overflow-hidden border-2 sm:border-4 border-green-200 relative z-[1]">
                   <MapContainer
                     key="create-map"
                     center={[formData.latitude, formData.longitude]}
@@ -471,17 +471,17 @@ const ExecutiveWorkAreas = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all text-lg shadow-lg"
+                  className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all text-base sm:text-lg shadow-lg"
                 >
                   Create Work Area
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-8 py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all"
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all text-base sm:text-lg"
                 >
                   Cancel
                 </button>
@@ -493,8 +493,8 @@ const ExecutiveWorkAreas = () => {
 
       {/* Edit Work Area Modal */}
       {showEditModal && selectedArea && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[998] p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 relative w-full max-w-4xl my-8 border-4 border-blue-200 z-[999]">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[998] p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 relative w-full max-w-4xl my-4 sm:my-8 border-2 sm:border-4 border-blue-200 z-[999]">
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-[1000]"
               onClick={() => {
@@ -507,11 +507,11 @@ const ExecutiveWorkAreas = () => {
               </svg>
             </button>
 
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            <div className="text-center mb-4 sm:mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                 Edit Work Area
               </h2>
-              <p className="text-gray-600">Update work area details</p>
+              <p className="text-sm sm:text-base text-gray-600">Update work area details</p>
             </div>
 
             <form onSubmit={handleUpdateWorkArea} className="space-y-6">
@@ -595,8 +595,8 @@ const ExecutiveWorkAreas = () => {
 
               {/* Interactive Map */}
               <div>
-                <label className="block text-gray-700 font-bold mb-2">Click on map to update location</label>
-                <div className="h-96 rounded-2xl overflow-hidden border-4 border-blue-200 relative z-[1]">
+                <label className="block text-gray-700 font-bold mb-2 text-sm sm:text-base">Click on map to update location</label>
+                <div className="h-64 sm:h-80 md:h-96 rounded-2xl overflow-hidden border-2 sm:border-4 border-blue-200 relative z-[1]">
                   <MapContainer
                     key={`edit-map-${selectedArea.id}`}
                     center={[formData.latitude, formData.longitude]}
@@ -615,10 +615,10 @@ const ExecutiveWorkAreas = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-700 transition-all text-lg shadow-lg"
+                  className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-700 transition-all text-base sm:text-lg shadow-lg"
                 >
                   Update Work Area
                 </button>
@@ -628,7 +628,7 @@ const ExecutiveWorkAreas = () => {
                     setShowEditModal(false);
                     setSelectedArea(null);
                   }}
-                  className="px-8 py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all"
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all text-base sm:text-lg"
                 >
                   Cancel
                 </button>

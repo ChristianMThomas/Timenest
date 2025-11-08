@@ -60,7 +60,10 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-            // Production (both www and non-www)
+            // Production - New subdomain
+            "https://timenest.infinitetechteam.com",
+            "http://timenest.infinitetechteam.com",
+            // Production - Old domain (keeping for backwards compatibility)
             "https://timenest.tech",
             "https://www.timenest.tech",
             "http://timenest.tech",

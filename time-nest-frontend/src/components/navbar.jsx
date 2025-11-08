@@ -133,6 +133,7 @@ const Navbar = () => {
                 </svg>
               )}
             </button>
+            {/* Animated Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`p-2 rounded-xl transition-all duration-300 ${
@@ -140,26 +141,33 @@ const Navbar = () => {
               }`}
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? (
-                <svg className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+              <div className="w-6 h-6 flex flex-col justify-center items-center">
+                <span className={`block w-6 h-0.5 ${isDarkMode ? 'bg-white' : 'bg-gray-700'} transform transition-all duration-300 ${
+                  mobileMenuOpen ? 'rotate-45 translate-y-1.5' : '-translate-y-1'
+                }`}></span>
+                <span className={`block w-6 h-0.5 ${isDarkMode ? 'bg-white' : 'bg-gray-700'} transition-all duration-300 ${
+                  mobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                }`}></span>
+                <span className={`block w-6 h-0.5 ${isDarkMode ? 'bg-white' : 'bg-gray-700'} transform transition-all duration-300 ${
+                  mobileMenuOpen ? '-rotate-45 -translate-y-1.5' : 'translate-y-1'
+                }`}></span>
+              </div>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
-      {mobileMenuOpen && (
-        <div className={`md:hidden border-t-2 ${
+      {/* Mobile Menu Dropdown with Smooth Animation */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        } border-t-2 ${
           isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+        }`}
+      >
+        <div className={`px-4 py-3 space-y-2 transform transition-transform duration-300 ${
+          mobileMenuOpen ? 'translate-y-0' : '-translate-y-4'
         }`}>
-          <div className="px-4 py-3 space-y-2">
             <button
               className={`w-full flex items-center px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 ${
                 isActive('/employee/home')
@@ -203,6 +211,14 @@ const Navbar = () => {
             </button>
           </div>
         </div>
+
+      {/* Backdrop Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setMobileMenuOpen(false)}
+          style={{ top: '80px' }}
+        />
       )}
     </nav>
   );

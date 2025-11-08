@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,19 +31,16 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final CompanyRepository companyRepository;
     private final PasswordResetTokenRepository tokenRepository;
-    private final org.springframework.mail.javamail.JavaMailSender mailSender;
 
     public AuthenticationService(UserRepository userRepository, CompanyRepository companyRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager, EmailService emailService,
-            PasswordResetTokenRepository tokenRepository,
-            org.springframework.mail.javamail.JavaMailSender mailSender) {
+            PasswordResetTokenRepository tokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
         this.companyRepository = companyRepository;
-        this.mailSender = mailSender;
         this.tokenRepository = tokenRepository;
     }
 
@@ -227,11 +223,26 @@ public class AuthenticationService {
         resetToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         tokenRepository.save(resetToken);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Reset your Timenest password");
-        message.setText("Click to reset: https://timenest.tech/auth/reset-password?token=" + token);
-        mailSender.send(message);
+        String subject = "Reset Your Timenest Password";
+        String htmlMsg = "<html>"
+                + "<body style=\"background-color:#f3f4f6; font-family:'Segoe UI', sans-serif; margin:0; padding:0;\">"
+                + "<div style=\"max-width:600px; margin:40px auto; background-color:#ffffff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; text-align:center;\">"
+                + "<div style=\"font-size:26px; color:#3b82f6; font-weight:600; margin-bottom:10px;\">Timenest</div>"
+                + "<div style=\"font-size:22px; font-weight:500; color:#111827;\">Password Reset Request</div>"
+                + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">We received a request to reset your password. Click the button below to create a new password.</div>"
+                + "<a href=\"https://timenest.tech/auth/reset-password?token=" + token + "\" style=\"display:inline-block; background-color:#3b82f6; color:#ffffff; padding:12px 30px; border-radius:8px; text-decoration:none; font-weight:600; margin:20px 0;\">Reset Password</a>"
+                + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">This link is valid for the next 15 minutes.</div>"
+                + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request a password reset, please ignore this email.<br />Mind-Forge LLC</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+
+        try {
+            emailService.sendVerificationEmail(email, subject, htmlMsg);
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            throw new RuntimeException("Failed to send password reset email");
+        }
     }
 
     public void resetPassword(String token, String newPassword) {

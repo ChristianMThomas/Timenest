@@ -3,10 +3,12 @@ import M_navbar from "../../components/M_navbar";
 import { useNavigate } from "react-router-dom";
 import { useDarkMode } from "../../context/DarkModeContext";
 import { API_BASE_URL } from "../../config/api";
+import { useNotification } from "../../components/Notification";
 
 const ExecutiveProfile = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
+  const { showError, showSuccess, NotificationComponent } = useNotification();
   const [userData, setUserData] = useState(null);
   const [username, setUsername] = useState(
     localStorage.getItem("username") || "Y/N"
@@ -99,7 +101,7 @@ const ExecutiveProfile = () => {
       setEditing(false);
     } catch (error) {
       console.error("Username update error:", error);
-      alert("Could not update username. Please try again.");
+      showError("Could not update username. Please try again.");
     }
   };
 
@@ -140,12 +142,12 @@ const ExecutiveProfile = () => {
 
       if (!response.ok) throw new Error("Failed to disband company");
 
-      alert("Company disbanded successfully");
+      showSuccess("Company disbanded successfully");
       localStorage.clear();
       navigate("/login");
     } catch (error) {
       console.error("Error disbanding company:", error);
-      alert("Could not disband company. Please try again.");
+      showError("Could not disband company. Please try again.");
     }
   };
 
@@ -162,11 +164,12 @@ const ExecutiveProfile = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert("Join code copied to clipboard!");
+    showSuccess("Join code copied to clipboard!");
   };
 
   return (
     <>
+      {NotificationComponent}
       <M_navbar />
       <div className={`min-h-screen flex flex-col items-center pt-24 px-4 pb-8 transition-colors duration-300 ${
         isDarkMode

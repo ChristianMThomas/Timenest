@@ -232,7 +232,7 @@ public class AuthenticationService {
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">We received a request to reset your password. Click the button below to create a new password.</div>"
                 + "<a href=\"https://timenest.infinitetechteam.com/auth/reset-password?token=" + token + "\" style=\"display:inline-block; background-color:#3b82f6; color:#ffffff; padding:12px 30px; border-radius:8px; text-decoration:none; font-weight:600; margin:20px 0;\">Reset Password</a>"
                 + "<div style=\"font-size:16px; color:#4b5563; margin:20px 0;\">This link is valid for the next 15 minutes.</div>"
-                + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request a password reset, please ignore this email.<br />Mind-Forge LLC</div>"
+                + "<div style=\"font-size:14px; color:#9ca3af;\">If you did not request a password reset, please ignore this email.<br />Infinite Tech Team</div>"
                 + "</div>"
                 + "</body>"
                 + "</html>";

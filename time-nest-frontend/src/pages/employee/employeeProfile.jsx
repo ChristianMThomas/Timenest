@@ -3,9 +3,11 @@ import Navbar from "../../components/navbar";
 import { useEffect } from "react";
 import { useDarkMode } from "../../context/DarkModeContext";
 import { API_BASE_URL } from "../../config/api";
+import { useNotification } from "../../components/Notification";
 
 const EmployeeProfile = () => {
   const { isDarkMode } = useDarkMode();
+  const { showError, NotificationComponent } = useNotification();
   {
     /*  Variables */
   }
@@ -90,7 +92,7 @@ const EmployeeProfile = () => {
       setEditing(false);
     } catch (error) {
       console.error("Username update error:", error);
-      alert("Could not update username. Please try again.");
+      showError("Could not update username. Please try again.");
     }
   };
 
@@ -134,6 +136,7 @@ const EmployeeProfile = () => {
   }
   return (
     <>
+      {NotificationComponent}
       <Navbar />
       <div className={`min-h-screen flex flex-col items-center pt-24 px-4 pb-8 transition-colors duration-300 ${
         isDarkMode

@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
+import { useNotification } from "../components/Notification";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { checkAuth } = useAuth();
+  const { showError, showSuccess, NotificationComponent } = useNotification();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [showRegister, setShowRegister] = useState(false);
   const [showVerifyForm, setShowVerifyForm] = useState(false);
@@ -24,6 +29,15 @@ const Login = () => {
 
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // Check for reset token in URL on component mount
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      setResetToken(token);
+      setShowResetPassword(true);
+    }
+  }, [searchParams]);
+
   const generateUsername = (email) => {
     const namePart = email.split("@")[0].replace(/\d/g, "");
     const randomDigits = Math.floor(10000 + Math.random() * 90000);
@@ -33,7 +47,7 @@ const Login = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (registerPassword !== confirmPassword) {
-      alert("Passwords do not match!");
+      showError("Passwords do not match!");
       return;
     }
 
@@ -55,10 +69,10 @@ const Login = () => {
         throw new Error("Registration failed");
       }
 
-      alert("Registration successful! Please verify your account.");
+      showSuccess("Registration successful! Please verify your account.");
       setShowVerifyForm(true);
     } catch (error) {
-      alert("Registration error. Please try again.");
+      showError("Registration error. Please try again.");
       console.error("Register error:", error);
     } finally {
       setIsRegistering(false);
@@ -83,11 +97,11 @@ const Login = () => {
         throw new Error("Verification failed");
       }
 
-      alert("Your account has been verified! You can now log in.");
+      showSuccess("Your account has been verified! You can now log in.");
       setShowVerifyForm(false);
       setShowRegister(false);
     } catch (error) {
-      alert("Verification error. Please check your code.");
+      showError("Verification error. Please check your code.");
       console.error("Verify error:", error);
     } finally {
       setIsRegistering(false);
@@ -96,11 +110,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log("=== FRONTEND LOGIN DEBUG ===");
-    console.log("Email:", email);
-    console.log("Password:", password ? "***" : "(empty)");
-    console.log("Request body:", JSON.stringify({ email, password }));
 
     setIsRegistering(true);
 
@@ -135,7 +144,6 @@ const Login = () => {
       }
 
       const profileData = await profileResponse.json();
-      console.log("Fetched profile:", profileData);
 
       if (profileData.username) {
         localStorage.setItem("username", profileData.username);
@@ -157,7 +165,6 @@ const Login = () => {
 
       if (companyResponse.ok) {
         const companyData = await companyResponse.json();
-        console.log("Fetched company:", companyData);
 
         if (companyData.name) {
           localStorage.setItem("company", companyData.name);
@@ -165,19 +172,15 @@ const Login = () => {
           console.warn("Company name not found in response");
         }
       } else if (companyResponse.status === 404) {
-        console.log("User has not joined a company yet");
         // This is okay - user will create/join company on /org page
       } else {
         console.warn("Failed to fetch company:", companyResponse.status);
       }
 
-      console.log("=== LOGIN SUCCESSFUL ===");
-      console.log("Token and user data stored in localStorage");
-
       // Trigger auth check which will handle navigation
       await checkAuth();
     } catch (error) {
-      alert(`Login failed: ${error.message}`);
+      showError(`Login failed: ${error.message}`);
       console.error("Login error:", error);
     } finally {
       setIsRegistering(false);
@@ -199,11 +202,11 @@ const Login = () => {
         throw new Error("Failed to send reset link");
       }
 
-      alert("Password reset link sent to your email!");
+      showSuccess("Password reset link sent to your email!");
       setShowForgotPassword(false);
       setShowResetPassword(true);
     } catch (error) {
-      alert("Error sending reset link. Please try again.");
+      showError("Error sending reset link. Please try again.");
       console.error("Forgot password error:", error);
     } finally {
       setIsRegistering(false);
@@ -214,7 +217,7 @@ const Login = () => {
     e.preventDefault();
 
     if (newPassword !== confirmNewPassword) {
-      alert("Passwords do not match!");
+      showError("Passwords do not match!");
       return;
     }
 
@@ -231,13 +234,15 @@ const Login = () => {
         throw new Error("Failed to reset password");
       }
 
-      alert("Password reset successful! You can now log in.");
+      showSuccess("Password reset successful! You can now log in.");
       setShowResetPassword(false);
       setResetToken("");
       setNewPassword("");
       setConfirmNewPassword("");
+      // Redirect to clean login page
+      navigate('/login');
     } catch (error) {
-      alert("Error resetting password. Please check your token.");
+      showError("Error resetting password. Please check your token.");
       console.error("Reset password error:", error);
     } finally {
       setIsRegistering(false);
@@ -245,6 +250,8 @@ const Login = () => {
   };
 
   return (
+    <>
+      {NotificationComponent}
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-hidden">
       {/* Loading Spinner Overlay */}
       {isRegistering && (
@@ -569,14 +576,27 @@ const Login = () => {
               <p className="text-gray-600">Create a new secure password</p>
             </div>
             <form onSubmit={handleResetPassword} className="space-y-6">
+              {searchParams.get('token') && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center text-green-700">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-semibold text-sm">Reset token verified from email</span>
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-gray-700 font-bold mb-2 text-left">Reset Token</label>
                 <input
                   type="text"
                   placeholder="Enter reset token from email"
-                  className="w-full px-6 py-4 border-2 border-green-200 rounded-xl outline-none focus:border-green-500 transition-colors text-lg"
+                  className={`w-full px-6 py-4 border-2 border-green-200 rounded-xl outline-none transition-colors text-lg ${
+                    searchParams.get('token') ? 'bg-gray-100 cursor-not-allowed' : 'focus:border-green-500'
+                  }`}
                   value={resetToken}
                   onChange={(e) => setResetToken(e.target.value)}
+                  readOnly={!!searchParams.get('token')}
                   required
                 />
               </div>
@@ -613,6 +633,7 @@ const Login = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

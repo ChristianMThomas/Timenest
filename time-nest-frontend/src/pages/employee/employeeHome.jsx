@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import Navbar from "../../components/navbar";
 import { useDarkMode } from "../../context/DarkModeContext";
 import { API_BASE_URL } from "../../config/api";
+import { useNotification } from "../../components/Notification";
 
 const EmployeeHome = () => {
   const { isDarkMode } = useDarkMode();
+  const { showError, showSuccess, NotificationComponent } = useNotification();
   const [isShiftActive, setIsShiftActive] = useState(
     localStorage.getItem("isShiftActive") === "true"
   );
@@ -152,12 +154,12 @@ const EmployeeHome = () => {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          alert("Could not get your location. Please enable location services.");
+          showError("Could not get your location. Please enable location services.");
           setLocationStatus("pending");
         }
       );
     } else {
-      alert("Geolocation is not supported by your browser.");
+      showError("Geolocation is not supported by your browser.");
       setLocationStatus("pending");
     }
   };
@@ -230,11 +232,11 @@ const EmployeeHome = () => {
         throw new Error(errorData || "Failed to log shift");
       }
 
-      alert("Shift logged successfully!");
+      showSuccess("Shift logged successfully!");
       console.log("Shift logged:", payload);
     } catch (error) {
       console.error("Error logging shift:", error);
-      alert(`Could not log shift: ${error.message}`);
+      showError(`Could not log shift: ${error.message}`);
       return;
     }
 
@@ -252,6 +254,7 @@ const EmployeeHome = () => {
 
   return (
     <>
+      {NotificationComponent}
       <Navbar />
       <div className={`min-h-screen flex flex-col items-center py-8 pt-20 transition-colors duration-300 ${
         isDarkMode

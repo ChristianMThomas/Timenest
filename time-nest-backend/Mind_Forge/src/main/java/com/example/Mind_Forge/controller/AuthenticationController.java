@@ -19,6 +19,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -102,6 +103,22 @@ public class AuthenticationController {
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> payload) {
         authenticationService.resetPassword(payload.get("token"), payload.get("newPassword"));
         return ResponseEntity.ok("Password updated");
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshToken(Authentication authentication) {
+        // Get authenticated user from SecurityContext (already validated by JWT filter)
+        User currentUser = (User) authentication.getPrincipal();
+
+        // Generate new token with fresh expiration
+        String newJwtToken = jwtService.generateToken(currentUser);
+        Long expiration = jwtService.getExpirationTime();
+
+        String role = currentUser.getRole();
+        Long companyId = currentUser.getCompany() != null ? currentUser.getCompany().getId() : null;
+
+        LoginResponse refreshResponse = new LoginResponse(newJwtToken, expiration, role, companyId);
+        return ResponseEntity.ok(refreshResponse);
     }
 
 }

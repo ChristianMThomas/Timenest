@@ -36,7 +36,8 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll() // Public auth endpoints
+                        .requestMatchers("/auth/refresh").authenticated() // Refresh requires valid token
+                        .requestMatchers("/auth/**").permitAll() // Other auth endpoints are public
                         .requestMatchers(HttpMethod.POST, "/timelogs").hasRole("EMPLOYEE")
                         .requestMatchers(HttpMethod.PUT, "/timelogs/**").hasRole("EXECUTIVE")
                         .requestMatchers(HttpMethod.DELETE, "/timelogs/**").hasRole("EXECUTIVE")

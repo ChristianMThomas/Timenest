@@ -130,6 +130,12 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
 
+      // Store token expiration time (14 days from now)
+      if (data.expiresIn) {
+        const expiresAt = Date.now() + data.expiresIn;
+        localStorage.setItem("tokenExpiresAt", expiresAt.toString());
+      }
+
       //  Fetch actual username from /users/me
       const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",

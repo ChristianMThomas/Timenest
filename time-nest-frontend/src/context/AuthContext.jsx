@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,6 +24,31 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Auto-refresh token mechanism
+  useEffect(() => {
+    if (!isAuthenticated || !tokenExpiresAt) return;
+
+    const checkAndRefreshToken = async () => {
+      const now = Date.now();
+      const timeUntilExpiration = tokenExpiresAt - now;
+      const twoDaysInMs = 2 * 24 * 60 * 60 * 1000; // 2 days
+
+      // If token expires in less than 2 days, refresh it
+      if (timeUntilExpiration < twoDaysInMs && timeUntilExpiration > 0) {
+        console.log('Token expiring soon, refreshing...');
+        await refreshToken();
+      }
+    };
+
+    // Check immediately
+    checkAndRefreshToken();
+
+    // Check every hour
+    const interval = setInterval(checkAndRefreshToken, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, tokenExpiresAt]);
 
   const checkAuth = async () => {
     const token = localStorage.getItem('token');
@@ -42,6 +68,12 @@ export const AuthProvider = ({ children }) => {
         navigate('/login');
       }
       return;
+    }
+
+    // Restore token expiration time from localStorage
+    const storedExpiresAt = localStorage.getItem('tokenExpiresAt');
+    if (storedExpiresAt) {
+      setTokenExpiresAt(parseInt(storedExpiresAt, 10));
     }
 
     try {
@@ -98,14 +130,56 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = (token, userData) => {
+  const login = (token, userData, expirationTime) => {
     localStorage.setItem('token', token);
     if (userData.username) localStorage.setItem('username', userData.username);
     if (userData.role) localStorage.setItem('role', userData.role.toLowerCase());
     if (userData.company?.name) localStorage.setItem('company', userData.company.name);
 
+    // Store token expiration time (current time + expiration duration)
+    if (expirationTime) {
+      const expiresAt = Date.now() + expirationTime;
+      localStorage.setItem('tokenExpiresAt', expiresAt.toString());
+      setTokenExpiresAt(expiresAt);
+    }
+
     setUser(userData);
     setIsAuthenticated(true);
+  };
+
+  const refreshToken = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+
+      // Update token and expiration time
+      localStorage.setItem('token', data.token);
+      const expiresAt = Date.now() + data.expiresIn;
+      localStorage.setItem('tokenExpiresAt', expiresAt.toString());
+      setTokenExpiresAt(expiresAt);
+
+      console.log('Token refreshed successfully');
+      return true;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      // If refresh fails, log the user out
+      logout();
+      return false;
+    }
   };
 
   const logout = () => {
@@ -122,6 +196,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuth,
+    refreshToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

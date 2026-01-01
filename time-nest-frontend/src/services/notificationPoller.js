@@ -4,8 +4,9 @@ class NotificationPollerService {
   constructor() {
     this.intervalId = null;
     this.isActive = false;
-    this.POLL_INTERVAL = 30000; // 30 seconds
+    this.POLL_INTERVAL = 60000; // 60 seconds (reduced from 30s for efficiency)
     this.onNotificationCallback = null;
+    this.consecutiveErrors = 0;
   }
 
   start(onNotificationCallback) {
@@ -57,11 +58,15 @@ class NotificationPollerService {
       });
 
       if (!response.ok) {
+        this.consecutiveErrors++;
         console.error('Failed to fetch notifications');
         return;
       }
 
       const notifications = await response.json();
+
+      // Reset error count on success
+      this.consecutiveErrors = 0;
 
       // Trigger callback for each undelivered notification
       if (notifications.length > 0 && this.onNotificationCallback) {
@@ -70,7 +75,13 @@ class NotificationPollerService {
         });
       }
     } catch (error) {
+      this.consecutiveErrors++;
       console.error('Error polling notifications:', error);
+
+      // If too many consecutive errors, slow down polling temporarily
+      if (this.consecutiveErrors >= 3) {
+        console.warn('Multiple polling failures, backing off temporarily');
+      }
     }
   }
 

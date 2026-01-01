@@ -30,20 +30,63 @@ const EmployeeHome = () => {
   const [showWorkAreaModal, setShowWorkAreaModal] = useState(false);
   const [distanceToWorkArea, setDistanceToWorkArea] = useState(null);
 
-  // Fetch work areas on mount
+  // Fetch work areas and active shift on mount
   useEffect(() => {
     fetchWorkAreas();
+    fetchActiveShift();
   }, []);
 
-  // Calculate elapsed time on mount if shift is active
-  useEffect(() => {
-    if (isShiftActive && shiftStartTime) {
-      const startTime = new Date(shiftStartTime);
+  // Fetch active shift from backend to sync state
+  const fetchActiveShift = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/timelogs/active-shift`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch active shift");
+
+      const data = await response.json();
+
+      if (data.hasActiveShift === false) {
+        // No active shift on backend, clear local state
+        setIsShiftActive(false);
+        setSeconds(0);
+        setShiftStartTime(null);
+        localStorage.removeItem("isShiftActive");
+        localStorage.removeItem("shiftStartTime");
+        localStorage.removeItem("shiftLocation");
+        return;
+      }
+
+      // Active shift exists, sync with backend
+      setIsShiftActive(true);
+      setLocation(data.location || "N/A");
+
+      // Parse the start time correctly - append 'Z' if not present to treat as UTC
+      let startTimeStr = data.startTime;
+      if (!startTimeStr.endsWith('Z') && !startTimeStr.includes('+')) {
+        startTimeStr = startTimeStr + 'Z';
+      }
+
+      const startTime = new Date(startTimeStr);
       const now = new Date();
       const elapsedSeconds = Math.floor((now - startTime) / 1000);
-      setSeconds(elapsedSeconds);
+
+      setShiftStartTime(startTime.toISOString());
+      setSeconds(Math.max(0, elapsedSeconds)); // Ensure non-negative
+
+      localStorage.setItem("isShiftActive", "true");
+      localStorage.setItem("shiftStartTime", startTime.toISOString());
+      localStorage.setItem("shiftLocation", data.location || "N/A");
+    } catch (error) {
+      console.error("Error fetching active shift:", error);
+      // Keep local state if fetch fails
     }
-  }, []);
+  };
 
   const fetchWorkAreas = async () => {
     try {
@@ -241,8 +284,14 @@ const EmployeeHome = () => {
 
       const timeLog = await response.json();
 
+      // Parse the start time correctly - append 'Z' if not present to treat as UTC
+      let startTimeStr = timeLog.startTime;
+      if (!startTimeStr.endsWith('Z') && !startTimeStr.includes('+')) {
+        startTimeStr = startTimeStr + 'Z';
+      }
+
       // Set local state
-      const startTime = new Date(timeLog.startTime).toISOString();
+      const startTime = new Date(startTimeStr).toISOString();
       setShiftStartTime(startTime);
       localStorage.setItem('shiftStartTime', startTime);
       localStorage.setItem('workAreaId', workArea.id);

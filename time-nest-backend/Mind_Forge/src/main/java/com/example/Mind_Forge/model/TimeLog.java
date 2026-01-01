@@ -7,7 +7,11 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "timelogs")
+@Table(name = "timelogs", indexes = {
+    @Index(name = "idx_active_shift", columnList = "is_active_shift"),
+    @Index(name = "idx_last_location_check", columnList = "last_location_check"),
+    @Index(name = "idx_user_active_shift", columnList = "user_id, is_active_shift")
+})
 @Getter
 @Setter
 public class TimeLog {

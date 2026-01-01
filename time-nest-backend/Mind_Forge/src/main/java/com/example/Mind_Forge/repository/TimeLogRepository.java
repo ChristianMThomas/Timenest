@@ -34,7 +34,11 @@ public interface TimeLogRepository extends CrudRepository<TimeLog, Long> {
 
     Optional<TimeLog> findByUserAndIsActiveShiftTrue(User user);
 
-    @Query("SELECT t FROM TimeLog t WHERE t.isActiveShift = true AND " +
+    @Query("SELECT t FROM TimeLog t " +
+           "LEFT JOIN FETCH t.user u " +
+           "LEFT JOIN FETCH u.company " +
+           "LEFT JOIN FETCH t.workArea " +
+           "WHERE t.isActiveShift = true AND " +
            "(t.lastLocationCheck IS NULL OR t.lastLocationCheck < :thresholdTime)")
     List<TimeLog> findActiveShiftsNeedingCheck(@Param("thresholdTime") LocalDateTime thresholdTime);
 }

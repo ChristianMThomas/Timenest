@@ -1,11 +1,13 @@
 package com.example.Mind_Forge.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.stereotype.Repository;
 
+import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.model.User;
 
 @Repository
@@ -21,4 +23,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByVerificationCode(String verificationCode);
 
     Optional<User> findByUsername(String username);
+
+    List<User> findByCompanyAndRole(Company company, String role);
 }

@@ -3,10 +3,12 @@ import Navbar from "../../components/navbar";
 import { useDarkMode } from "../../context/DarkModeContext";
 import { API_BASE_URL } from "../../config/api";
 import { useNotification } from "../../components/Notification";
+import locationHeartbeatService from "../../services/locationHeartbeat";
+import notificationPollerService from "../../services/notificationPoller";
 
 const EmployeeHome = () => {
   const { isDarkMode } = useDarkMode();
-  const { showError, showSuccess, NotificationComponent } = useNotification();
+  const { showError, showSuccess, showWarning, NotificationComponent } = useNotification();
   const [isShiftActive, setIsShiftActive] = useState(
     localStorage.getItem("isShiftActive") === "true"
   );
@@ -120,6 +122,58 @@ const EmployeeHome = () => {
     }
   }, [shiftStartTime]);
 
+  // Start/stop services based on shift state
+  useEffect(() => {
+    if (isShiftActive) {
+      // Start heartbeat service
+      locationHeartbeatService.start();
+
+      // Start notification polling
+      notificationPollerService.start((notification) => {
+        handleIncomingNotification(notification);
+      });
+    } else {
+      // Stop services when shift ends
+      locationHeartbeatService.stop();
+      notificationPollerService.stop();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      locationHeartbeatService.stop();
+      notificationPollerService.stop();
+    };
+  }, [isShiftActive]);
+
+  // Handle incoming notifications from the poller
+  const handleIncomingNotification = (notification) => {
+    if (notification.notificationType === 'WARNING') {
+      showWarning(notification.message, 0); // 0 = don't auto-dismiss
+    } else if (notification.notificationType === 'AUTO_CLOCKOUT') {
+      showError(notification.message, 0); // 0 = don't auto-dismiss
+
+      // Force stop local shift
+      setIsShiftActive(false);
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      setSeconds(0);
+      setShiftStartTime(null);
+
+      // Clear localStorage
+      localStorage.removeItem('isShiftActive');
+      localStorage.removeItem('shiftLocation');
+      localStorage.removeItem('shiftStartTime');
+      localStorage.removeItem('workAreaId');
+      localStorage.removeItem('checkInLatitude');
+      localStorage.removeItem('checkInLongitude');
+    }
+
+    // Mark as read after short delay (user has seen it)
+    setTimeout(() => {
+      notificationPollerService.markAsRead(notification.id);
+    }, 3000);
+  };
+
   const handleStartShift = () => {
     if (!isShiftActive) {
       // Show work area selection modal
@@ -164,30 +218,92 @@ const EmployeeHome = () => {
     }
   };
 
-  const confirmStartShift = (workArea, latitude, longitude) => {
-    const startTime = new Date().toISOString();
-    setShiftStartTime(startTime);
-    localStorage.setItem("shiftStartTime", startTime);
-    localStorage.setItem("workAreaId", workArea.id);
-    localStorage.setItem("checkInLatitude", latitude);
-    localStorage.setItem("checkInLongitude", longitude);
+  const confirmStartShift = async (workArea, latitude, longitude) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/timelogs/start-shift`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workAreaId: workArea.id,
+          checkInLatitude: latitude,
+          checkInLongitude: longitude,
+          location: workArea.name
+        })
+      });
 
-    setLocation(workArea.name);
-    localStorage.setItem("shiftLocation", workArea.name);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to start shift');
+      }
 
-    setIsShiftActive(true);
-    setShowWorkAreaModal(false);
+      const timeLog = await response.json();
 
-    intervalRef.current = setInterval(() => {
-      setSeconds((prev) => prev + 1);
-    }, 1000);
+      // Set local state
+      const startTime = new Date(timeLog.startTime).toISOString();
+      setShiftStartTime(startTime);
+      localStorage.setItem('shiftStartTime', startTime);
+      localStorage.setItem('workAreaId', workArea.id);
+      localStorage.setItem('checkInLatitude', latitude);
+      localStorage.setItem('checkInLongitude', longitude);
+
+      setLocation(workArea.name);
+      localStorage.setItem('shiftLocation', workArea.name);
+
+      setIsShiftActive(true);
+      setShowWorkAreaModal(false);
+
+      intervalRef.current = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+
+      showSuccess('Shift started successfully!');
+    } catch (error) {
+      console.error('Error starting shift:', error);
+      showError(`Failed to start shift: ${error.message}`);
+      setLocationStatus('pending');
+    }
   };
 
-  const handleStopShift = () => {
-    setIsShiftActive(false);
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-    setShowLogForm(true);
+  const handleStopShift = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/timelogs/end-shift`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to end shift');
+      }
+
+      const timeLog = await response.json();
+
+      // Update local state
+      setIsShiftActive(false);
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      setSeconds(0);
+      setShiftStartTime(null);
+
+      // Clear localStorage
+      localStorage.removeItem('isShiftActive');
+      localStorage.removeItem('shiftLocation');
+      localStorage.removeItem('shiftStartTime');
+      localStorage.removeItem('workAreaId');
+      localStorage.removeItem('checkInLatitude');
+      localStorage.removeItem('checkInLongitude');
+
+      showSuccess(`Shift ended successfully! Total: ${timeLog.hours.toFixed(2)} hours`);
+    } catch (error) {
+      console.error('Error ending shift:', error);
+      showError(`Failed to end shift: ${error.message}`);
+    }
   };
 
   const formatTime = (secs) => {

@@ -4,10 +4,14 @@ import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.model.TimeLog;
 import com.example.Mind_Forge.model.User;
 import com.example.Mind_Forge.model.WorkArea;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TimeLogRepository extends CrudRepository<TimeLog, Long> {
@@ -24,4 +28,13 @@ public interface TimeLogRepository extends CrudRepository<TimeLog, Long> {
     List<TimeLog> findByCompany(Company company);
 
     List<TimeLog> findByWorkArea(WorkArea workArea);
+
+    // Shift monitoring queries
+    List<TimeLog> findByIsActiveShiftTrue();
+
+    Optional<TimeLog> findByUserAndIsActiveShiftTrue(User user);
+
+    @Query("SELECT t FROM TimeLog t WHERE t.isActiveShift = true AND " +
+           "(t.lastLocationCheck IS NULL OR t.lastLocationCheck < :thresholdTime)")
+    List<TimeLog> findActiveShiftsNeedingCheck(@Param("thresholdTime") LocalDateTime thresholdTime);
 }

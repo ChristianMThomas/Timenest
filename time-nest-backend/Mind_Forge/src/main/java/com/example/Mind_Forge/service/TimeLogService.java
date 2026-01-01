@@ -1,7 +1,11 @@
 package com.example.Mind_Forge.service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.example.Mind_Forge.dto.timelog.CreateTimeLogDto;
+import com.example.Mind_Forge.dto.timelog.LocationHeartbeatDto;
 import com.example.Mind_Forge.dto.timelog.UpdateTimeLogDto;
 import com.example.Mind_Forge.model.Company;
 import com.example.Mind_Forge.model.TimeLog;
@@ -192,5 +197,116 @@ public class TimeLogService {
         }
 
         timeLogRepository.deleteById(id);
+    }
+
+    // Shift lifecycle methods for active shift monitoring
+
+    @Transactional
+    public TimeLog startActiveShift(CreateTimeLogDto input) {
+        User user = getAuthenticatedUser();
+
+        if (!user.getRole().equalsIgnoreCase("employee")) {
+            throw new AccessDeniedException("Only employees can start shifts");
+        }
+
+        // Check if user already has an active shift
+        Optional<TimeLog> existingShift = timeLogRepository.findByUserAndIsActiveShiftTrue(user);
+        if (existingShift.isPresent()) {
+            throw new IllegalStateException("You already have an active shift. Please clock out first.");
+        }
+
+        // Validate geofence at clock-in
+        if (input.getWorkAreaId() == null || input.getCheckInLatitude() == null ||
+                input.getCheckInLongitude() == null) {
+            throw new IllegalArgumentException("Work area and location are required to start shift");
+        }
+
+        workAreaService.validateGeofence(
+                input.getWorkAreaId(),
+                input.getCheckInLatitude(),
+                input.getCheckInLongitude()
+        );
+
+        // Create active shift
+        TimeLog timeLog = new TimeLog();
+        timeLog.setUser(user);
+        timeLog.setCompany(user.getCompany());
+        timeLog.setStartTime(LocalDateTime.now());
+        timeLog.setIsActiveShift(true);
+
+        WorkArea workArea = workAreaService.getWorkAreaById(input.getWorkAreaId());
+        timeLog.setWorkArea(workArea);
+        timeLog.setLocation(workArea.getName());
+
+        // Set initial location
+        timeLog.setCheckInLatitude(input.getCheckInLatitude());
+        timeLog.setCheckInLongitude(input.getCheckInLongitude());
+        timeLog.setCurrentLatitude(input.getCheckInLatitude());
+        timeLog.setCurrentLongitude(input.getCheckInLongitude());
+        timeLog.setLastLocationCheck(LocalDateTime.now());
+
+        // Initialize violation tracking
+        timeLog.setViolationCount(0);
+        timeLog.setAutoClockedOut(false);
+
+        TimeLog saved = timeLogRepository.save(timeLog);
+        logger.info("Started active shift {} for user {}", saved.getId(), user.getEmail());
+
+        return saved;
+    }
+
+    @Transactional
+    public void updateLocationHeartbeat(LocationHeartbeatDto heartbeat) {
+        User user = getAuthenticatedUser();
+
+        Optional<TimeLog> activeShiftOpt = timeLogRepository.findByUserAndIsActiveShiftTrue(user);
+        if (activeShiftOpt.isEmpty()) {
+            throw new IllegalStateException("No active shift found");
+        }
+
+        TimeLog timeLog = activeShiftOpt.get();
+
+        // Update location and timestamp
+        timeLog.setCurrentLatitude(heartbeat.getLatitude());
+        timeLog.setCurrentLongitude(heartbeat.getLongitude());
+        timeLog.setLastLocationCheck(LocalDateTime.now());
+
+        timeLogRepository.save(timeLog);
+
+        logger.debug("Updated location heartbeat for user {} at ({}, {})",
+                user.getEmail(), heartbeat.getLatitude(), heartbeat.getLongitude());
+    }
+
+    @Transactional
+    public TimeLog endActiveShift() {
+        User user = getAuthenticatedUser();
+
+        Optional<TimeLog> activeShiftOpt = timeLogRepository.findByUserAndIsActiveShiftTrue(user);
+        if (activeShiftOpt.isEmpty()) {
+            throw new IllegalStateException("No active shift found to end");
+        }
+
+        TimeLog timeLog = activeShiftOpt.get();
+
+        // Mark shift as ended
+        LocalDateTime endTime = LocalDateTime.now();
+        timeLog.setEndTime(endTime);
+        timeLog.setIsActiveShift(false);
+
+        // Calculate hours
+        long durationMillis = Duration.between(timeLog.getStartTime(), endTime).toMillis();
+        double hours = durationMillis / (1000.0 * 60 * 60);
+        timeLog.setHours(hours);
+
+        TimeLog saved = timeLogRepository.save(timeLog);
+        logger.info("Ended shift {} for user {} - Duration: {} hours",
+                saved.getId(), user.getEmail(), hours);
+
+        return saved;
+    }
+
+    public TimeLog getActiveShift() {
+        User user = getAuthenticatedUser();
+        return timeLogRepository.findByUserAndIsActiveShiftTrue(user).orElse(null);
     }
 }

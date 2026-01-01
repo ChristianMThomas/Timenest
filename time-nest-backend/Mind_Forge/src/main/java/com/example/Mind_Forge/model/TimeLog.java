@@ -46,6 +46,31 @@ public class TimeLog {
     @Column(name = "check_in_longitude")
     private Double checkInLongitude;
 
+    // Shift monitoring fields
+    @Column(name = "is_active_shift")
+    private Boolean isActiveShift = false;
+
+    @Column(name = "last_location_check")
+    private LocalDateTime lastLocationCheck;
+
+    @Column(name = "current_latitude")
+    private Double currentLatitude;
+
+    @Column(name = "current_longitude")
+    private Double currentLongitude;
+
+    @Column(name = "violation_count")
+    private Integer violationCount = 0;
+
+    @Column(name = "first_violation_time")
+    private LocalDateTime firstViolationTime;
+
+    @Column(name = "auto_clocked_out")
+    private Boolean autoClockedOut = false;
+
+    @Column(name = "auto_clockout_reason")
+    private String autoClockoutReason;
+
     // Default constructor
     public TimeLog() {
     }

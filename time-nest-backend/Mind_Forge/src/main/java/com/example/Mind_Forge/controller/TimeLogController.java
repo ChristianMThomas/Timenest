@@ -5,10 +5,12 @@ import com.example.Mind_Forge.dto.timelog.UpdateTimeLogDto;
 import com.example.Mind_Forge.model.TimeLog;
 import com.example.Mind_Forge.response.TimeLogResponse;
 import com.example.Mind_Forge.service.TimeLogService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/timelogs")
@@ -66,6 +68,38 @@ public class TimeLogController {
     public ResponseEntity<Void> deleteTimeLog(@PathVariable Long id) {
         timeLogService.deleteTimeLog(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Shift lifecycle endpoints
+    @PostMapping("/start-shift")
+    public ResponseEntity<?> startShift(@RequestBody CreateTimeLogDto input) {
+        try {
+            TimeLog timeLog = timeLogService.startActiveShift(input);
+            return ResponseEntity.ok(TimeLogResponse.fromEntity(timeLog));
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/end-shift")
+    public ResponseEntity<?> endShift() {
+        try {
+            TimeLog timeLog = timeLogService.endActiveShift();
+            return ResponseEntity.ok(TimeLogResponse.fromEntity(timeLog));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/active-shift")
+    public ResponseEntity<?> getActiveShift() {
+        TimeLog activeShift = timeLogService.getActiveShift();
+        if (activeShift == null) {
+            return ResponseEntity.ok().body(Map.of("hasActiveShift", false));
+        }
+        return ResponseEntity.ok(TimeLogResponse.fromEntity(activeShift));
     }
 }
 

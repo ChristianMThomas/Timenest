@@ -285,8 +285,8 @@ const EmployeeProfile = () => {
                         <p className="font-bold text-gray-800 text-lg">{log.location}</p>
                       </div>
                     </div>
-                    <div className="bg-green-100 text-green-700 px-4 py-2 rounded-full font-bold text-lg">
-                      {log.hours.toFixed(2)}h
+                    <div className={`${log.endTime ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'} px-4 py-2 rounded-full font-bold text-lg`}>
+                      {log.endTime && log.hours != null ? `${log.hours.toFixed(2)}h` : 'Active'}
                     </div>
                   </div>
                   <div className="flex items-center text-gray-600 text-sm space-x-4 ml-14">
@@ -297,7 +297,7 @@ const EmployeeProfile = () => {
                       {formatDateTime(log.startTime)}
                     </div>
                     <span>→</span>
-                    <div>{formatDateTime(log.endTime)}</div>
+                    <div>{log.endTime ? formatDateTime(log.endTime) : 'In Progress'}</div>
                   </div>
                 </div>
               ))}

@@ -86,9 +86,9 @@ class LocationHeartbeatService {
   getCurrentPosition() {
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false, // Use network/wifi location (faster, less battery)
+        enableHighAccuracy: true, // Use GPS for accurate location tracking
         timeout: 10000,
-        maximumAge: 60000 // Accept cached position up to 1 minute old (reduces GPS calls)
+        maximumAge: 5000 // Accept cached position up to 5 seconds old (fresher location data)
       });
     });
   }

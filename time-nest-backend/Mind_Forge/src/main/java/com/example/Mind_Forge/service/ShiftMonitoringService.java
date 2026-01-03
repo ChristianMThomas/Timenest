@@ -29,7 +29,7 @@ public class ShiftMonitoringService {
     private final UserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ShiftMonitoringService.class);
-    private static final int HEARTBEAT_TIMEOUT_MINUTES = 6; // Slightly more than 5 min
+    private static final int HEARTBEAT_TIMEOUT_MINUTES = 3; // Reduced for faster detection (max 10min to auto-clockout)
 
     public ShiftMonitoringService(
             TimeLogRepository timeLogRepository,

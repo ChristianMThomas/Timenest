@@ -167,22 +167,36 @@ const EmployeeHome = () => {
 
   // Start/stop services based on shift state
   useEffect(() => {
+    console.log('========================================');
+    console.log('Shift state changed. isShiftActive:', isShiftActive);
+
     if (isShiftActive) {
+      console.log('Starting monitoring services...');
+
       // Start heartbeat service
       locationHeartbeatService.start();
+      console.log('Location heartbeat service started:', locationHeartbeatService.isRunning());
 
       // Start notification polling
       notificationPollerService.start((notification) => {
+        console.log('Received notification:', notification);
         handleIncomingNotification(notification);
       });
+      console.log('Notification poller service started:', notificationPollerService.isRunning());
     } else {
+      console.log('Stopping monitoring services...');
+
       // Stop services when shift ends
       locationHeartbeatService.stop();
       notificationPollerService.stop();
+
+      console.log('Services stopped');
     }
+    console.log('========================================');
 
     // Cleanup on unmount
     return () => {
+      console.log('Component unmounting - stopping services');
       locationHeartbeatService.stop();
       notificationPollerService.stop();
     };

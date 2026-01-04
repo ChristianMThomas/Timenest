@@ -470,7 +470,7 @@ const ExecutiveProfile = () => {
 
             <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 mb-6">
               <p className="text-gray-700 font-medium mb-2">
-                ⚠️ This action <strong>cannot be undone</strong>.
+                Warning: This action <strong>cannot be undone</strong>.
               </p>
               <p className="text-gray-600 text-sm">
                 All employee access will be revoked and company data will be permanently deleted.

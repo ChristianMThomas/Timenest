@@ -30,12 +30,12 @@ public class CompanyService {
         this.userRepository = userRepository;
     }
 
-    // 🔍 Find company by name
+    // Find company by name
     public Optional<Company> findByName(String name) {
         return companyRepository.findByName(name);
     }
 
-    // 🔍 Find company by join code
+    // Find company by join code
     public Optional<Company> findByJoinCode(String joinCode) {
         return companyRepository.findByJoinCode(joinCode);
     }
@@ -64,7 +64,7 @@ public class CompanyService {
         if (principal instanceof UserDetails) {
             email = ((UserDetails) principal).getUsername();
         } else {
-            email = principal.toString(); // fallback
+            email = principal.toString();
         }
 
         User user = userRepository.findByEmail(email)
@@ -111,22 +111,21 @@ public class CompanyService {
         return company;
     }
 
-    // ✅ Get company by ID
+    // Get company by ID
     public Company getCompanyById(Long id) {
         return companyRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Company not found with ID: " + id));
     }
 
-    // ✅ Update company
+    // Update company
     public Company updateCompany(Long id, Company updatedCompany) {
         Company existing = getCompanyById(id);
         existing.setName(updatedCompany.getName());
         existing.setJoinCode(updatedCompany.getJoinCode());
-        // Add other fields as needed
         return companyRepository.save(existing);
     }
 
-    // ✅ Delete company
+    // Delete company
     public void deleteCompany(Long id) {
         if (!companyRepository.existsById(id)) {
             throw new NoSuchElementException("Company not found with ID: " + id);

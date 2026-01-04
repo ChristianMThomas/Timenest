@@ -259,12 +259,18 @@ public class TimeLogService {
     public void updateLocationHeartbeat(LocationHeartbeatDto heartbeat) {
         User user = getAuthenticatedUser();
 
+        logger.info("Heartbeat received from user: {}", user.getEmail());
+        logger.debug("Heartbeat data - Lat: {}, Lng: {}, Timestamp: {}",
+                heartbeat.getLatitude(), heartbeat.getLongitude(), heartbeat.getTimestamp());
+
         Optional<TimeLog> activeShiftOpt = timeLogRepository.findByUserAndIsActiveShiftTrue(user);
         if (activeShiftOpt.isEmpty()) {
+            logger.warn("No active shift found for user {} - heartbeat rejected", user.getEmail());
             throw new IllegalStateException("No active shift found");
         }
 
         TimeLog timeLog = activeShiftOpt.get();
+        LocalDateTime beforeUpdate = timeLog.getLastLocationCheck();
 
         // Update location and timestamp
         timeLog.setCurrentLatitude(heartbeat.getLatitude());
@@ -273,8 +279,8 @@ public class TimeLogService {
 
         timeLogRepository.save(timeLog);
 
-        logger.debug("Updated location heartbeat for user {} at ({}, {})",
-                user.getEmail(), heartbeat.getLatitude(), heartbeat.getLongitude());
+        logger.info("Updated heartbeat for shift ID {} - Previous check: {}, New check: {}",
+                timeLog.getId(), beforeUpdate, timeLog.getLastLocationCheck());
     }
 
     @Transactional

@@ -109,9 +109,8 @@ const EmployeeProfile = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Repsonse was not ok");
+      if (!response.ok) throw new Error("Response was not ok");
       const result = await response.json();
-      console.log(result);
       setUserTimeLogs(result);
     } catch (err) {
       setError(err.message);
@@ -310,9 +309,3 @@ const EmployeeProfile = () => {
 };
 
 export default EmployeeProfile;
-
-//TODO LIST
-// MAKE TIME IN TIMEZONE BASED ON LOCATION
-// MAKE WORK HISTORY SCROLL IF TOO MANY LOGS
-// MAKE TIME CONTINUE TO TRACK EVEN NOT ON HOMEPAGE
-// IMPROVE UI

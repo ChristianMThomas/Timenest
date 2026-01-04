@@ -65,7 +65,7 @@ public class User implements UserDetails {
         this.role = role;
     }
 
-    // ✅ Map domain role to Spring Security authority
+    // Map domain role to Spring Security authority
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         log.info("User role from DB: {}", role);
@@ -83,13 +83,15 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority(springRole));
     }
 
+    // Returns the actual username field
     public String getActualUsername(){
-        return this.username;  // RETURN ACTUAL USERNAME (BAND-AID SO WE DONT MESS UP JWT)
+        return this.username;
     }
-    
+
+    // Override to return email as username for JWT authentication
     @Override
     public String getUsername() {
-        return this.email; // JWT subject = email
+        return this.email;
     }
 
     @Override

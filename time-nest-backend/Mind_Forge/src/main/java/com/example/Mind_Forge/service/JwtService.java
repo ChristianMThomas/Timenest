@@ -30,7 +30,7 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // Allows to extraction
+    // Extract a specific claim from the token
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -54,12 +54,11 @@ public class JwtService {
             UserDetails userDetails,
             long expiration) {
 
-        // Puts the JWT Togther by setting Claim & Subject, Adding TimeStamps, and Signs
-        // using secret key
+        // Build the JWT by setting claims, subject, timestamps, and signing with secret key
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername()) // ✅ if username == email
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)

@@ -69,14 +69,21 @@ class LocationHeartbeatService {
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('Heartbeat failed:', error);
+        console.error('========================================');
+        console.error('HEARTBEAT FAILED');
+        console.error('Status:', response.status);
+        console.error('Error:', error);
+        console.error('========================================');
 
         // If no active shift, stop heartbeat
         if (error.error?.includes('No active shift')) {
+          console.warn('No active shift detected - stopping heartbeat service');
           this.stop();
         }
       } else {
-        console.log('Location heartbeat sent successfully');
+        const result = await response.json();
+        console.log('Location heartbeat sent successfully at', new Date().toISOString());
+        console.log('Position:', { latitude, longitude });
       }
     } catch (error) {
       console.error('Error sending heartbeat:', error);

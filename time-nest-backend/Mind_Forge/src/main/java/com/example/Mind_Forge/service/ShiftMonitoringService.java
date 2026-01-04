@@ -47,25 +47,49 @@ public class ShiftMonitoringService {
     // Called by scheduled job every 5 minutes
     @Transactional
     public void checkAllActiveShifts() {
-        log.info("Starting scheduled shift monitoring check");
+        LocalDateTime now = LocalDateTime.now();
+        log.info("========================================");
+        log.info("Starting scheduled shift monitoring check at {}", now);
+        log.info("Heartbeat timeout threshold: {} minutes", HEARTBEAT_TIMEOUT_MINUTES);
 
-        LocalDateTime thresholdTime = LocalDateTime.now().minusMinutes(HEARTBEAT_TIMEOUT_MINUTES);
+        LocalDateTime thresholdTime = now.minusMinutes(HEARTBEAT_TIMEOUT_MINUTES);
+        log.info("Checking for shifts with last heartbeat before: {}", thresholdTime);
+
         List<TimeLog> activeShifts = timeLogRepository.findActiveShiftsNeedingCheck(thresholdTime);
 
-        log.info("Found {} active shifts to check", activeShifts.size());
+        log.info("Query returned {} active shifts to check", activeShifts.size());
+
+        if (activeShifts.isEmpty()) {
+            log.info("No active shifts require monitoring at this time");
+            log.info("========================================");
+            return;
+        }
+
+        int processedCount = 0;
+        int errorCount = 0;
 
         for (TimeLog timeLog : activeShifts) {
             try {
+                log.debug("Checking shift ID {} for user {}", timeLog.getId(), timeLog.getUser().getEmail());
                 checkShiftCompliance(timeLog);
+                processedCount++;
             } catch (Exception e) {
+                errorCount++;
                 log.error("Error checking shift {} for user {}",
                         timeLog.getId(), timeLog.getUser().getEmail(), e);
             }
         }
+
+        log.info("Monitoring check complete: {} processed, {} errors", processedCount, errorCount);
+        log.info("========================================");
     }
 
-    @Transactional
     private void checkShiftCompliance(TimeLog timeLog) {
+        if (timeLog == null || timeLog.getUser() == null) {
+            log.warn("Skipping null timeLog or user");
+            return;
+        }
+
         User user = timeLog.getUser();
         WorkArea workArea = timeLog.getWorkArea();
 

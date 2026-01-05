@@ -44,6 +44,11 @@ public class ShiftMonitoringService {
         this.userRepository = userRepository;
     }
 
+    // Get count of active shifts for early exit optimization
+    public long getActiveShiftCount() {
+        return timeLogRepository.countByIsActiveShiftTrue();
+    }
+
     // Called by scheduled job every 5 minutes
     @Transactional
     public void checkAllActiveShifts() {

@@ -36,6 +36,16 @@ public class ScheduledTasksConfiguration {
     public void monitorActiveShifts() {
         log.info("========================================");
         log.info("SCHEDULED TASK TRIGGERED at {}", LocalDateTime.now());
+
+        // OPTIMIZATION: Quick count query before expensive processing
+        long activeShiftCount = shiftMonitoringService.getActiveShiftCount();
+        if (activeShiftCount == 0) {
+            log.info("No active shifts - skipping monitoring check");
+            log.info("========================================");
+            return;
+        }
+
+        log.info("Monitoring {} active shifts", activeShiftCount);
         log.info("========================================");
         try {
             shiftMonitoringService.checkAllActiveShifts();

@@ -30,6 +30,10 @@ const EmployeeHome = () => {
   const [showWorkAreaModal, setShowWorkAreaModal] = useState(false);
   const [distanceToWorkArea, setDistanceToWorkArea] = useState(null);
 
+  // Real-time geofence violation warnings
+  const [violationWarning, setViolationWarning] = useState(null);
+  const [networkError, setNetworkError] = useState(null);
+
   // Fetch work areas and active shift on mount
   useEffect(() => {
     fetchWorkAreas();
@@ -173,9 +177,51 @@ const EmployeeHome = () => {
     if (isShiftActive) {
       console.log('Starting monitoring services...');
 
-      // Start heartbeat service
-      locationHeartbeatService.start();
-      console.log('Location heartbeat service started:', locationHeartbeatService.isRunning());
+      // Get work area config from localStorage or fetch it
+      const workAreaId = localStorage.getItem('workAreaId');
+      if (workAreaId) {
+        // Find work area from loaded workAreas
+        const workArea = workAreas.find(wa => wa.id === parseInt(workAreaId));
+
+        if (workArea) {
+          console.log('Starting location heartbeat with work area:', workArea);
+
+          // Start heartbeat service with work area config and callbacks
+          locationHeartbeatService.start(
+            {
+              latitude: workArea.latitude,
+              longitude: workArea.longitude,
+              radiusMeters: workArea.radiusMeters,
+              name: workArea.name
+            },
+            {
+              onViolationDetected: (distance) => {
+                console.warn('Geofence violation detected! Distance:', distance);
+                setViolationWarning(
+                  `You are ${Math.round(distance)}m from work area. Return within 3 minutes or you'll be clocked out.`
+                );
+              },
+              onReturnedToCompliance: () => {
+                console.log('Returned to geofence compliance');
+                setViolationWarning(null);
+              },
+              onNetworkError: () => {
+                console.error('Network error in location tracking');
+                setNetworkError('Unable to send location updates. Check your connection.');
+              }
+            }
+          );
+          console.log('Location heartbeat service started:', locationHeartbeatService.isRunning());
+        } else {
+          console.warn('Work area not found in loaded work areas');
+          // Start without work area config (fallback to old behavior)
+          locationHeartbeatService.start();
+        }
+      } else {
+        console.warn('No work area ID found in localStorage');
+        // Start without work area config (fallback to old behavior)
+        locationHeartbeatService.start();
+      }
 
       // Start notification polling
       notificationPollerService.start((notification) => {
@@ -190,6 +236,10 @@ const EmployeeHome = () => {
       locationHeartbeatService.stop();
       notificationPollerService.stop();
 
+      // Clear warnings
+      setViolationWarning(null);
+      setNetworkError(null);
+
       console.log('Services stopped');
     }
     console.log('========================================');
@@ -200,7 +250,7 @@ const EmployeeHome = () => {
       locationHeartbeatService.stop();
       notificationPollerService.stop();
     };
-  }, [isShiftActive]);
+  }, [isShiftActive, workAreas]); // Added workAreas dependency
 
   // Handle incoming notifications from the poller
   const handleIncomingNotification = (notification) => {
@@ -449,6 +499,36 @@ const EmployeeHome = () => {
             Welcome back, <span className={`font-bold ${isDarkMode ? 'text-purple-400' : 'text-indigo-700'}`}>{localStorage.getItem("username") || "New User"}</span>
           </p>
         </div>
+
+        {/* Real-time Geofence Violation Warning */}
+        {violationWarning && (
+          <div className="w-full max-w-2xl mb-4 bg-red-500 text-white p-4 rounded-lg shadow-lg animate-pulse">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <strong className="font-bold">Geofence Violation</strong>
+                <p className="text-sm">{violationWarning}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Network Error Warning */}
+        {networkError && (
+          <div className="w-full max-w-2xl mb-4 bg-yellow-500 text-white p-4 rounded-lg shadow-lg">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <strong className="font-bold">Connection Issue</strong>
+                <p className="text-sm">{networkError}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Timer Display */}
         <div className={`rounded-3xl shadow-2xl p-8 mb-8 w-full max-w-2xl border-4 transition-colors duration-300 ${

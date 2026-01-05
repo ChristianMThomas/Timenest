@@ -34,6 +34,9 @@ public interface TimeLogRepository extends CrudRepository<TimeLog, Long> {
 
     Optional<TimeLog> findByUserAndIsActiveShiftTrue(User user);
 
+    // Efficient count for early exit optimization
+    long countByIsActiveShiftTrue();
+
     @Query("SELECT t FROM TimeLog t " +
            "LEFT JOIN FETCH t.user u " +
            "LEFT JOIN FETCH u.company " +

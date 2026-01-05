@@ -272,14 +272,33 @@ public class TimeLogService {
         TimeLog timeLog = activeShiftOpt.get();
         LocalDateTime beforeUpdate = timeLog.getLastLocationCheck();
 
-        // Update location and timestamp
-        timeLog.setCurrentLatitude(heartbeat.getLatitude());
-        timeLog.setCurrentLongitude(heartbeat.getLongitude());
-        timeLog.setLastLocationCheck(LocalDateTime.now());
+        // OPTIMIZATION: Only update coordinates if significant movement detected
+        boolean hasSignificantMovement = calculateSignificantMovement(
+            timeLog.getCurrentLatitude(),
+            timeLog.getCurrentLongitude(),
+            heartbeat.getLatitude(),
+            heartbeat.getLongitude()
+        );
+
+        boolean isStaleLocation = beforeUpdate == null ||
+                                  beforeUpdate.isBefore(LocalDateTime.now().minusMinutes(5));
+
+        if (hasSignificantMovement || isStaleLocation) {
+            // Update full location data
+            timeLog.setCurrentLatitude(heartbeat.getLatitude());
+            timeLog.setCurrentLongitude(heartbeat.getLongitude());
+            timeLog.setLastLocationCheck(LocalDateTime.now());
+
+            logger.info("Updated location for shift {} (movement detected)", timeLog.getId());
+        } else {
+            // Just refresh timestamp - employee hasn't moved significantly
+            timeLog.setLastLocationCheck(LocalDateTime.now());
+            logger.debug("Refreshed timestamp for shift {} (no significant movement)", timeLog.getId());
+        }
 
         timeLogRepository.save(timeLog);
 
-        logger.info("Updated heartbeat for shift ID {} - Previous check: {}, New check: {}",
+        logger.info("Heartbeat processed for shift ID {} - Previous check: {}, New check: {}",
                 timeLog.getId(), beforeUpdate, timeLog.getLastLocationCheck());
     }
 
@@ -314,5 +333,19 @@ public class TimeLogService {
     public TimeLog getActiveShift() {
         User user = getAuthenticatedUser();
         return timeLogRepository.findByUserAndIsActiveShiftTrue(user).orElse(null);
+    }
+
+    private boolean calculateSignificantMovement(Double lat1, Double lon1, Double lat2, Double lon2) {
+        // If no previous location, consider it significant
+        if (lat1 == null || lon1 == null) {
+            return true;
+        }
+
+        // Use existing WorkAreaService distance calculation
+        double distanceMeters = workAreaService.calculateDistance(lat1, lon1, lat2, lon2);
+
+        // Consider movement significant if >10 meters
+        // This filters out GPS jitter for stationary employees
+        return distanceMeters > 10.0;
     }
 }

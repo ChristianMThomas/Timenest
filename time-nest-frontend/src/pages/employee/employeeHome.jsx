@@ -33,6 +33,7 @@ const EmployeeHome = () => {
   // Real-time geofence violation warnings
   const [violationWarning, setViolationWarning] = useState(null);
   const [networkError, setNetworkError] = useState(null);
+  const [tabSuspendedWarning, setTabSuspendedWarning] = useState(false);
 
   // Fetch work areas and active shift on mount
   useEffect(() => {
@@ -208,6 +209,19 @@ const EmployeeHome = () => {
               onNetworkError: () => {
                 console.error('Network error in location tracking');
                 setNetworkError('Unable to send location updates. Check your connection.');
+              },
+              onTabSuspended: () => {
+                console.warn('Tab went to background - tracking may stop!');
+                setTabSuspendedWarning(true);
+              },
+              onTabResumed: (suspendedDuration) => {
+                console.log(`Tab resumed after ${suspendedDuration}s`);
+                setTabSuspendedWarning(false);
+
+                // If suspended for a long time, warn user
+                if (suspendedDuration > 180) {
+                  showWarning(`App was in background for ${Math.round(suspendedDuration / 60)} minutes. You may have been clocked out.`, 5000);
+                }
               }
             }
           );
@@ -239,6 +253,7 @@ const EmployeeHome = () => {
       // Clear warnings
       setViolationWarning(null);
       setNetworkError(null);
+      setTabSuspendedWarning(false);
 
       console.log('Services stopped');
     }
@@ -525,6 +540,26 @@ const EmployeeHome = () => {
               <div>
                 <strong className="font-bold">Connection Issue</strong>
                 <p className="text-sm">{networkError}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Suspended Warning - Critical for mobile users */}
+        {tabSuspendedWarning && isShiftActive && (
+          <div className="w-full max-w-2xl mb-4 bg-orange-500 text-white p-4 rounded-lg shadow-lg sticky top-20 z-40 animate-pulse">
+            <div className="flex items-start">
+              <svg className="w-6 h-6 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <div className="flex-1">
+                <strong className="font-bold text-lg">Keep This App Open!</strong>
+                <p className="text-sm mt-1">
+                  Location tracking stops when this tab is in the background. Keep this app visible to avoid being automatically clocked out.
+                </p>
+                <p className="text-xs mt-2 opacity-90">
+                  💡 Tip: Keep your screen on and this tab active while working
+                </p>
               </div>
             </div>
           </div>

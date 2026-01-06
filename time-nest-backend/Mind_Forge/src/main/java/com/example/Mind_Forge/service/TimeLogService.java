@@ -329,7 +329,8 @@ public class TimeLogService {
                 logger.warn("REAL-TIME: First geofence violation for user {} - Distance: {}m (limit: {}m)",
                         timeLog.getUser().getEmail(), Math.round(distance), Math.round(workArea.getRadiusMeters()));
             } else if (currentViolations == 1) {
-                // Check if violation has been sustained for grace period (2 minutes)
+                // Check if violation has been sustained for grace period (3 minutes)
+                // Increased from 2 to 3 to account for brief tab suspensions on mobile
                 LocalDateTime firstViolationTime = timeLog.getFirstViolationTime();
                 if (firstViolationTime == null) {
                     firstViolationTime = LocalDateTime.now();
@@ -338,7 +339,7 @@ public class TimeLogService {
 
                 long minutesSinceFirstViolation = Duration.between(firstViolationTime, LocalDateTime.now()).toMinutes();
 
-                if (minutesSinceFirstViolation >= 2) {
+                if (minutesSinceFirstViolation >= 3) {
                     // Grace period elapsed - auto clock out
                     LocalDateTime detectionTime = LocalDateTime.now();
                     String reason = String.format("Remained outside work area for %d minutes (%.0f meters away)",

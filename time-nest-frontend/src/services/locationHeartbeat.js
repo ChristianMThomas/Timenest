@@ -21,6 +21,13 @@ class LocationHeartbeatService {
     this.onViolationDetected = null;
     this.onReturnedToCompliance = null;
     this.onNetworkError = null;
+    this.onTabSuspended = null;
+    this.onTabResumed = null;
+
+    // Page Visibility tracking
+    this.isTabVisible = !document.hidden;
+    this.tabSuspendedAt = null;
+    this.visibilityHandler = null;
   }
 
   start(workAreaConfig, callbacks = {}) {
@@ -37,11 +44,16 @@ class LocationHeartbeatService {
     this.onViolationDetected = callbacks.onViolationDetected;
     this.onReturnedToCompliance = callbacks.onReturnedToCompliance;
     this.onNetworkError = callbacks.onNetworkError;
+    this.onTabSuspended = callbacks.onTabSuspended;
+    this.onTabResumed = callbacks.onTabResumed;
 
     if (!navigator.geolocation) {
       console.error('Geolocation not supported');
       return;
     }
+
+    // Set up Page Visibility API to detect background tabs
+    this.setupVisibilityListener();
 
     // Use watchPosition for continuous monitoring (not polling)
     this.watchId = navigator.geolocation.watchPosition(
@@ -67,6 +79,54 @@ class LocationHeartbeatService {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
     }
+
+    // Remove visibility listener
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
+  }
+
+  setupVisibilityListener() {
+    this.visibilityHandler = () => {
+      const isNowVisible = !document.hidden;
+
+      if (!isNowVisible && this.isTabVisible) {
+        // Tab just went to background
+        console.warn('⚠️ TAB SUSPENDED - Location tracking may pause!');
+        this.isTabVisible = false;
+        this.tabSuspendedAt = Date.now();
+
+        if (this.onTabSuspended) {
+          this.onTabSuspended();
+        }
+      } else if (isNowVisible && !this.isTabVisible) {
+        // Tab returned to foreground
+        const suspendedDuration = this.tabSuspendedAt
+          ? Math.round((Date.now() - this.tabSuspendedAt) / 1000)
+          : 0;
+
+        console.log(`✅ TAB RESUMED after ${suspendedDuration}s - Resuming location tracking`);
+        this.isTabVisible = true;
+        this.tabSuspendedAt = null;
+
+        if (this.onTabResumed) {
+          this.onTabResumed(suspendedDuration);
+        }
+
+        // Send immediate heartbeat to confirm we're still here
+        if (this.lastPosition) {
+          this.sendHeartbeatToServer(
+            this.lastPosition.latitude,
+            this.lastPosition.longitude,
+            true // urgent
+          );
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityHandler);
+    console.log('Page Visibility API listener registered');
   }
 
   handlePositionUpdate(position) {

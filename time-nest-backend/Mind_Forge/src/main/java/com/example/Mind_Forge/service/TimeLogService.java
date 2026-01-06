@@ -296,10 +296,85 @@ public class TimeLogService {
             logger.debug("Refreshed timestamp for shift {} (no significant movement)", timeLog.getId());
         }
 
+        // REAL-TIME GEOFENCE CHECKING
+        WorkArea workArea = timeLog.getWorkArea();
+        if (workArea != null) {
+            checkGeofenceViolationRealtime(timeLog, workArea, heartbeat.getLatitude(), heartbeat.getLongitude());
+        }
+
         timeLogRepository.save(timeLog);
 
         logger.info("Heartbeat processed for shift ID {} - Previous check: {}, New check: {}",
                 timeLog.getId(), beforeUpdate, timeLog.getLastLocationCheck());
+    }
+
+    private void checkGeofenceViolationRealtime(TimeLog timeLog, WorkArea workArea, Double latitude, Double longitude) {
+        // Calculate distance from work area
+        double distance = workAreaService.calculateDistance(
+                workArea.getLatitude(),
+                workArea.getLongitude(),
+                latitude,
+                longitude
+        );
+
+        boolean outsideGeofence = distance > workArea.getRadiusMeters();
+        int currentViolations = timeLog.getViolationCount() != null ? timeLog.getViolationCount() : 0;
+
+        if (outsideGeofence) {
+            // User is outside geofence
+            if (currentViolations == 0) {
+                // First violation - increment count and log warning
+                timeLog.setViolationCount(1);
+                timeLog.setFirstViolationTime(LocalDateTime.now());
+                logger.warn("REAL-TIME: First geofence violation for user {} - Distance: {}m (limit: {}m)",
+                        timeLog.getUser().getEmail(), Math.round(distance), Math.round(workArea.getRadiusMeters()));
+            } else if (currentViolations == 1) {
+                // Check if violation has been sustained for grace period (2 minutes)
+                LocalDateTime firstViolationTime = timeLog.getFirstViolationTime();
+                if (firstViolationTime == null) {
+                    firstViolationTime = LocalDateTime.now();
+                    timeLog.setFirstViolationTime(firstViolationTime);
+                }
+
+                long minutesSinceFirstViolation = Duration.between(firstViolationTime, LocalDateTime.now()).toMinutes();
+
+                if (minutesSinceFirstViolation >= 2) {
+                    // Grace period elapsed - auto clock out
+                    LocalDateTime detectionTime = LocalDateTime.now();
+                    String reason = String.format("Remained outside work area for %d minutes (%.0f meters away)",
+                            minutesSinceFirstViolation, distance);
+
+                    logger.warn("REAL-TIME: Second geofence violation for user {} - AUTO CLOCK OUT. Reason: {}",
+                            timeLog.getUser().getEmail(), reason);
+
+                    // Auto clock out
+                    timeLog.setEndTime(detectionTime);
+                    timeLog.setIsActiveShift(false);
+                    timeLog.setAutoClockedOut(true);
+                    timeLog.setAutoClockoutReason(reason);
+                    timeLog.setViolationCount(2);
+
+                    // Calculate hours worked
+                    long durationMillis = Duration.between(timeLog.getStartTime(), detectionTime).toMillis();
+                    double hours = durationMillis / (1000.0 * 60 * 60);
+                    timeLog.setHours(hours);
+
+                    logger.info("REAL-TIME: Auto clocked out user {} at {} - Duration: {} hours",
+                            timeLog.getUser().getEmail(), detectionTime, hours);
+                } else {
+                    logger.debug("REAL-TIME: User {} still outside geofence but within grace period ({} min elapsed)",
+                            timeLog.getUser().getEmail(), minutesSinceFirstViolation);
+                }
+            }
+        } else {
+            // User is back inside geofence - reset violations if any
+            if (currentViolations > 0) {
+                logger.info("REAL-TIME: User {} returned to compliance, resetting violations",
+                        timeLog.getUser().getEmail());
+                timeLog.setViolationCount(0);
+                timeLog.setFirstViolationTime(null);
+            }
+        }
     }
 
     @Transactional
